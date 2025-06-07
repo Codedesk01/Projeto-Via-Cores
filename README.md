@@ -1,4 +1,3 @@
-Claro! Com base no arquivo `app.pyw` que você enviou, analisei o conteúdo e elaborei um exemplo de `README.md` em português para um repositório no GitHub. O arquivo parece ser parte de um sistema de controle de estoque com leitura de código de barras e interface gráfica usando `tkinter`. Veja o modelo abaixo:
 
 ---
 
