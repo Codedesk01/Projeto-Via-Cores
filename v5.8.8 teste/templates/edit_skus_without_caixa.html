@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar SKUs Sem Caixa - ViaCores</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/Logo.png') }}" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f4f7fa;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            max-width: 200px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+        }
+
+        .btn-custom {
+            background-color: #2c3e50;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-custom:hover {
+            background-color: #34495e;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .card {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .table th, .table td {
+            text-align: center;
+            vertical-align: middle;
+            padding: 12px;
+        }
+
+        .table tr:hover {
+            background-color: #f1f3f5;
+        }
+
+        .editable-field {
+            width: 100px;
+            margin: 0 auto;
+            font-size: 0.9rem;
+        }
+
+        .is-invalid {
+            border-color: #dc3545 !important;
+        }
+
+        .notification {
+            position: relative;
+            margin-top: 10px;
+            padding: 10px 30px 10px 15px;
+            border-radius: 5px;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+        .notification.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .notification.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .notification.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .notification .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            color: inherit;
+        }
+
+        .actions-cell {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .sku-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .image-placeholder {
+            width: 50px;
+            height: 50px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .modal-full-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 5px;
+        }
+
+        .modal-body {
+            padding: 20px;
+            height: calc(90vh - 120px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-xl {
+            max-width: 90vw;
+        }
+
+        .modal-backdrop {
+            z-index: 1040 !important;
+        }
+
+        .modal {
+            z-index: 1050 !important;
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                margin: 15px;
+                padding: 15px;
+            }
+
+            .editable-field {
+                width: 80px;
+            }
+
+            .table th, .table td {
+                padding: 8px;
+                font-size: 0.85rem;
+            }
+
+            .actions-cell {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="text-center">
+        <img src="{{ url_for('static', filename='img/viacores.png') }}" alt="Logo ViaCores" class="logo">
+    </div>
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0"><i class="bi bi-boxes me-2"></i>Editar SKUs Sem Caixa</h1>
+            <a href="{{ url_for('index') }}" class="btn btn-custom"><i class="bi bi-arrow-left"></i> Voltar</a>
+        </div>
+
+        <div id="notificationsContainer">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="notification {{ 'success' if category == 'info' else 'error' }} show">
+                            {{ message }}
+                            <span class="close-btn">×</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Quantidade</th>
+                                <th>Caixa</th>
+                                <th>Imagem</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if items %}
+                                {% for item in items %}
+                                    <tr data-sku="{{ item.codigo }}">
+                                        <td>{{ item.codigo }}</td>
+                                        <td class="quantity-cell" data-quantity="{{ item.quantidade }}">{{ item.quantidade }}</td>
+                                        <td class="caixa-cell" data-caixa="{{ item.caixa }}">{{ item.caixa or 'N/A' }}</td>
+                                        <td>
+                                            <img src="/get_image/{{ item.codigo }}" class="sku-image" alt="Imagem de {{ item.codigo }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                            <div class="image-placeholder" style="display: none;">Sem Imagem</div>
+                                        </td>
+                                        <td class="actions-cell">
+                                            <button class="btn btn-sm btn-warning edit-btn" title="Editar"><i class="bi bi-lock-fill"></i></button>
+                                            <button class="btn btn-sm btn-primary upload-image-btn" data-sku="{{ item.codigo }}" title="Importar Imagem"><i class="bi bi-upload"></i></button>
+                                            <button class="btn btn-sm btn-secondary show-image-btn" data-sku="{{ item.codigo }}" style="display: none;" title="Mostrar Imagem"><i class="bi bi-image"></i></button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Nenhum SKU sem caixa encontrado.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="imageUploadModal" tabindex="-1" aria-labelledby="imageUploadModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="imageUploadModalLabel">Importar Imagem</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="imageUploadForm" enctype="multipart/form-data">
+                            <input type="hidden" id="uploadSku" name="sku">
+                            <div class="mb-3">
+                                <label for="imageInput" class="form-label">Selecione a Imagem</label>
+                                <input type="file" class="form-control" id="imageInput" name="image" accept="image/*" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Importar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="imageDisplayModal" tabindex="-1" aria-labelledby="imageDisplayModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="imageDisplayModalLabel">Imagem do SKU</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <img id="modalImage" src="" alt="Imagem do SKU" class="modal-full-image">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <footer>ViaCores ERP - Versão 3.4 Diamond  | Desenvolvido por ViaCores</footer>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showNotification(text, type) {
+            const container = document.getElementById('notificationsContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                ${text}
+                <span class="close-btn">×</span>
+            `;
+            container.appendChild(notification);
+            setTimeout(() => notification.classList.add('show'), 10);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+            notification.querySelector('.close-btn').addEventListener('click', () => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            });
+        }
+
+        function createCaixaOptions(currentCaixa) {
+            let options = `<option value="" ${currentCaixa === '' ? 'selected' : ''}>N/A</option>`;
+            for (let i = 1; i <= 30; i++) {
+                options += `<option value="${i}" ${currentCaixa == i ? 'selected' : ''}>${i}</option>`;
+            }
+            options += `<option value="F/C" ${currentCaixa === 'F/C' ? 'selected' : ''}>F/C - Fora da Caixa</option>`;
+            return options;
+        }
+
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            const row = button.closest('tr');
+            const sku = row.dataset.sku;
+            const quantityCell = row.querySelector('.quantity-cell');
+            const caixaCell = row.querySelector('.caixa-cell');
+            const actionsCell = row.querySelector('.actions-cell');
+            let isEditing = false;
+
+            button.addEventListener('click', () => {
+                if (!isEditing) {
+                    // Enable editing
+                    const currentQuantity = quantityCell.dataset.quantity;
+                    const currentCaixa = caixaCell.dataset.caixa || '';
+                    quantityCell.innerHTML = `
+                        <input type="number" class="form-control editable-field quantity-input" value="${currentQuantity}" min="0" required>
+                    `;
+                    caixaCell.innerHTML = `
+                        <select class="form-select editable-field caixa-input">
+                            ${createCaixaOptions(currentCaixa)}
+                        </select>
+                    `;
+
+                    const saveBtn = document.createElement('button');
+                    saveBtn.className = 'btn btn-sm btn-success save-btn';
+                    saveBtn.title = 'Salvar';
+                    saveBtn.innerHTML = '<i class="bi bi-check-lg"></i>';
+                    actionsCell.appendChild(saveBtn);
+
+                    const quantityInput = quantityCell.querySelector('.quantity-input');
+                    const caixaInput = caixaCell.querySelector('.caixa-input');
+
+                    quantityInput.addEventListener('input', () => {
+                        if (quantityInput.value < 0) {
+                            quantityInput.classList.add('is-invalid');
+                            showNotification('Quantidade não pode ser negativa.', 'error');
+                        } else {
+                            quantityInput.classList.remove('is-invalid');
+                        }
+                    });
+
+                    caixaInput.addEventListener('change', () => {
+                        const value = caixaInput.value;
+                        const prefix = sku.substring(0, 2);
+                        const skusQuePrecisamCaixa = ['PV', 'PH', 'FF', 'FH', 'RV', 'PR'];
+                        if (skusQuePrecisamCaixa.includes(prefix) && value === '') {
+                            caixaInput.classList.add('is-invalid');
+                            showNotification(`SKU ${sku} requer uma caixa válida (1-30 ou F/C).`, 'error');
+                        } else {
+                            caixaInput.classList.remove('is-invalid');
+                        }
+                    });
+
+                    saveBtn.addEventListener('click', () => {
+                        const newQuantity = parseInt(quantityInput.value);
+                        const newCaixa = caixaInput.value;
+                        const prefix = sku.substring(0, 2);
+                        const skusQuePrecisamCaixa = ['PV', 'PH', 'FF', 'FH', 'RV', 'PR'];
+
+                        if (isNaN(newQuantity) || newQuantity < 0) {
+                            showNotification('Quantidade inválida.', 'error');
+                            quantityInput.classList.add('is-invalid');
+                            return;
+                        }
+                        if (skusQuePrecisamCaixa.includes(prefix) && newCaixa === '') {
+                            showNotification(`SKU ${sku} requer uma caixa válida (1-30 ou F/C).`, 'error');
+                            caixaInput.classList.add('is-invalid');
+                            return;
+                        }
+
+                        const formData = new FormData();
+                        formData.append('barcode', sku);
+                        formData.append('quantity', newQuantity);
+                        formData.append('caixa', newCaixa);
+
+                        fetch('{{ url_for("edit_item") }}', {
+                            method: 'POST',
+                            body: formData,
+                            headers: { 'Accept': 'application/json' }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('[Client] Resposta do servidor (edição):', data);
+                            if (data.success) {
+                                showNotification(data.message || `Item ${sku} atualizado com sucesso!`, 'success');
+                                quantityCell.dataset.quantity = newQuantity;
+                                quantityCell.textContent = newQuantity;
+                                caixaCell.dataset.caixa = newCaixa;
+                                caixaCell.textContent = newCaixa === '' ? 'N/A' : newCaixa;
+                                saveBtn.remove();
+                                button.innerHTML = '<i class="bi bi-lock-fill"></i>';
+                                button.title = 'Editar';
+                                isEditing = false;
+                                if (newCaixa !== '' || newQuantity === 0) {
+                                    row.remove();
+                                    if (!document.querySelector('tbody tr')) {
+                                        document.querySelector('tbody').innerHTML = '<tr><td colspan="5" class="text-center">Nenhum SKU sem caixa encontrado.</td></tr>';
+                                    }
+                                }
+                            } else {
+                                showNotification(data.error || 'Erro ao atualizar item.', 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('[Client] Erro ao editar:', error);
+                            showNotification('Erro ao processar a solicitação.', 'error');
+                        });
+                    });
+
+                    button.innerHTML = '<i class="bi bi-unlock-fill"></i>';
+                    button.title = 'Editar';
+                    isEditing = true;
+                } else {
+                    // Cancel editing
+                    quantityCell.textContent = quantityCell.dataset.quantity;
+                    caixaCell.textContent = caixaCell.dataset.caixa === '' ? 'N/A' : caixaCell.dataset.caixa;
+                    actionsCell.querySelector('.save-btn')?.remove();
+                    button.innerHTML = '<i class="bi bi-lock-fill"></i>';
+                    button.title = 'Editar';
+                    isEditing = false;
+                }
+            });
+        });
+
+        document.querySelectorAll('.sku-image').forEach(img => {
+            img.addEventListener('load', () => {
+                img.style.display = 'block';
+                img.nextElementSibling.style.display = 'none';
+                const showBtn = img.closest('tr').querySelector('.show-image-btn');
+                if (showBtn) showBtn.style.display = 'inline-block';
+            });
+        });
+
+        document.querySelectorAll('.upload-image-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const sku = btn.dataset.sku;
+                document.getElementById('uploadSku').value = sku;
+                document.getElementById('imageUploadModalLabel').textContent = `Importar Imagem para ${sku}`;
+                new bootstrap.Modal(document.getElementById('imageUploadModal')).show();
+            });
+        });
+
+        document.querySelectorAll('.show-image-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const sku = btn.dataset.sku;
+                const modalImage = document.getElementById('modalImage');
+                modalImage.src = `/get_image/${sku}`;
+                document.getElementById('imageDisplayModalLabel').textContent = `Imagem do SKU ${sku}`;
+                new bootstrap.Modal(document.getElementById('imageDisplayModal')).show();
+            });
+        });
+
+        document.getElementById('imageUploadForm')?.addEventListener('submit', event => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            fetch('{{ url_for("upload_image") }}', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('[Client] Resposta do servidor (upload imagem):', data);
+                if (data.success) {
+                    showNotification(data.message || 'Imagem importada com sucesso!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('imageUploadModal')).hide();
+                    document.getElementById('imageUploadForm').reset();
+                    const sku = formData.get('sku');
+                    const row = document.querySelector(`tr[data-sku="${sku}"]`);
+                    if (row) {
+                        const img = row.querySelector('.sku-image');
+                        img.src = `/get_image/${sku}?t=${Date.now()}`;
+                        img.style.display = 'block';
+                        img.nextElementSibling.style.display = 'none';
+                        row.querySelector('.show-image-btn').style.display = 'inline-block';
+                    }
+                } else {
+                    showNotification(data.error || 'Erro ao importar imagem.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('[Client] Erro ao importar imagem:', error);
+                showNotification('Erro ao processar a solicitação.', 'error');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Controle de EAN por Loja</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      background: linear-gradient(180deg, #f4f7fa 0%, #ebedf0 100%);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      padding-left: 280px;
+      transition: padding-left 0.3s ease;
+      color: #2d3748;
+    }
+    body.sidebar-collapsed {
+      padding-left: 88px;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 280px;
+      background: #ffffff;
+      border-right: 1px solid #e2e8f0;
+      padding: 32px 20px;
+      transition: width 0.3s ease;
+      z-index: 1000;
+      box-shadow: 4px 0 16px rgba(0, 0, 0, 0.06);
+    }
+    .sidebar.collapsed {
+      width: 88px;
+    }
+    .sidebar .logo {
+      max-width: 200px;
+      display: block;
+      margin: 0 auto 32px;
+      transition: max-width 0.3s ease;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    }
+    .sidebar.collapsed .logo {
+      max-width: 60px;
+    }
+    .sidebar .nav-title {
+      color: #1a3c87;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 20px 0;
+      text-align: center;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .sidebar.collapsed .nav-title {
+      display: none;
+    }
+    .sidebar .nav-link {
+      color: #4a5568;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-radius: 10px;
+      margin: 6px 10px;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .sidebar .nav-link:hover {
+      background: linear-gradient(90deg, #e0e7ff 0%, #dbeafe 100%);
+      color: #1a3c87;
+      transform: translateX(6px);
+    }
+    .sidebar .nav-link::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 4px;
+      background: #1a3c87;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .sidebar .nav-link:hover::before {
+      opacity: 1;
+    }
+    .sidebar .nav-link i {
+      font-size: 1.35rem;
+      transition: transform 0.25s ease;
+    }
+    .sidebar .nav-link:hover i {
+      transform: rotate(10deg) scale(1.2);
+    }
+    .sidebar .nav-link span {
+      display: inline-block;
+    }
+    .sidebar.collapsed .nav-link span {
+      display: none;
+    }
+    .sidebar .toggle-btn {
+      background: none;
+      border: none;
+      color: #4a5568;
+      font-size: 1.75rem;
+      padding: 14px;
+      width: 100%;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .sidebar .toggle-btn:hover {
+      color: #1a3c87;
+      transform: scale(1.1);
+    }
+    .container {
+      max-width: 1600px; /* Aumentado para tabela maior */
+      margin: 32px auto;
+      padding: 0 20px;
+      background: #ffffff;
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      color: #1a3c87;
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0 0 32px;
+      text-align: center;
+      letter-spacing: -0.02em;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    textarea {
+      font-family: 'Courier New', Courier, monospace;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      transition: border-color 0.2s;
+    }
+    textarea:focus {
+      border-color: #1a3c87;
+      box-shadow: 0 0 0 4px rgba(26, 60, 135, 0.15);
+      background: #ffffff;
+    }
+    .card-sku {
+      background: #ffffff;
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+      margin-bottom: 32px;
+      padding: 32px;
+      transition: all 0.3s ease;
+    }
+    .card-sku:hover {
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      transform: translateY(-4px);
+    }
+    .btn-check-loja {
+      border-radius: 50%;
+      width: 36px; /* Aumentado */
+      height: 36px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px; /* Aumentado */
+      transition: all 0.2s;
+    }
+    .btn-check-loja:hover {
+      transform: scale(1.1);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    .btn-check-loja:active {
+      animation: pulse 0.2s;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    .btn-orange {
+      background-color: #fd7e14;
+      border-color: #fd7e14;
+    }
+    .btn-orange:hover {
+      background-color: #e66c12;
+      border-color: #e66c12;
+      transform: scale(1.1);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    .btn-success, .btn-primary, .btn-warning, .btn-copy {
+      border-radius: 12px;
+      padding: 14px 24px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .btn-success {
+      background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+    }
+    .btn-success:hover {
+      background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #1a3c87 0%, #2b528a 100%);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #15306b 0%, #1e406f 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .btn-warning {
+      background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+    }
+    .btn-warning:hover {
+      background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .btn-copy {
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+      color: #ffffff;
+      padding: 8px 16px; /* Aumentado */
+      font-size: 1rem; /* Aumentado */
+      margin-left: 12px;
+    }
+    .btn-copy:hover {
+      background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .form-control {
+      border-radius: 12px;
+      border: 1px solid #d1d5db;
+      font-size: 1.2rem; /* Aumentado */
+      padding: 16px 24px; /* Aumentado */
+      background: #f9fafb;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .form-control:focus {
+      border-color: #1a3c87;
+      box-shadow: 0 0 0 4px rgba(26, 60, 135, 0.15);
+      background: #ffffff;
+    }
+    .table {
+      font-size: 1.1rem; /* Aumentado */
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      width: 100%;
+    }
+    .table th {
+      background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+      font-weight: 700;
+      color: #1f2937;
+      text-transform: uppercase;
+      font-size: 1rem; /* Aumentado */
+      letter-spacing: 0.06em;
+      padding: 20px; /* Aumentado */
+      text-align: center;
+      min-width: 120px; /* Aumentado */
+    }
+    .table td {
+      vertical-align: middle;
+      padding: 20px; /* Aumentado */
+      border-bottom: 1px solid #e5e7eb;
+      text-align: center;
+      min-width: 120px; /* Aumentado */
+    }
+    .table td.sku-ean-column {
+      text-align: left;
+      white-space: nowrap;
+      min-width: 200px; /* Aumentado para SKU e EAN */
+    }
+    .alert {
+      max-width: 720px;
+      margin: 20px auto;
+      font-size: 1rem;
+      padding: 16px;
+      border-radius: 10px;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1e40af;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    .user-info {
+      font-size: 1rem;
+      color: #4a5568;
+      margin-bottom: 16px;
+      text-align: right;
+    }
+    .welcome-screen {
+      text-align: center;
+      padding: 50px;
+    }
+    .welcome-screen .btn-loja {
+      font-size: 1.2rem;
+      margin: 10px;
+      padding: 15px 30px;
+      border-radius: 15px;
+      background: linear-gradient(135deg, #1a3c87 0%, #2b528a 100%);
+      color: #ffffff;
+      transition: all 0.3s ease;
+    }
+    .welcome-screen .btn-loja:hover {
+      background: linear-gradient(135deg, #15306b 0%, #1e406f 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    @media (max-width: 992px) {
+      body {
+        padding-left: 88px;
+      }
+      body.sidebar-collapsed {
+        padding-left: 0;
+      }
+      .sidebar {
+        width: 88px;
+      }
+      .sidebar.expanded {
+        width: 260px;
+      }
+      .sidebar .logo {
+        max-width: 60px;
+      }
+      .sidebar.expanded .logo {
+        max-width: 180px;
+      }
+      .sidebar .nav-title {
+        display: none;
+      }
+      .sidebar.expanded .nav-title {
+        display: block;
+      }
+      .sidebar .nav-link span {
+        display: none;
+      }
+      .sidebar.expanded .nav-link span {
+        display: inline-block;
+      }
+      .container {
+        max-width: 95vw;
+        padding: 0 16px;
+      }
+      .welcome-screen .btn-loja {
+        font-size: 1rem;
+        padding: 12px 24px;
+      }
+      .table {
+        font-size: 1rem; /* Ajustado */
+      }
+      .table th, .table td {
+        padding: 16px; /* Ajustado */
+        min-width: 100px; /* Ajustado */
+      }
+      .table td.sku-ean-column {
+        min-width: 180px; /* Ajustado */
+      }
+    }
+    @media (max-width: 576px) {
+      .container {
+        margin: 20px auto;
+      }
+      h2 {
+        font-size: 1.75rem;
+      }
+      .form-control {
+        font-size: 1rem;
+        padding: 12px 16px;
+      }
+      .btn-success, .btn-primary, .btn-warning, .btn-copy {
+        padding: 12px 20px;
+        font-size: 1rem;
+      }
+      .table {
+        font-size: 0.9rem; /* Ajustado */
+      }
+      .table th, .table td {
+        padding: 12px; /* Ajustado */
+        min-width: 80px; /* Ajustado */
+      }
+      .table td.sku-ean-column {
+        min-width: 150px; /* Ajustado */
+      }
+      .alert {
+        font-size: 0.9rem;
+        padding: 12px;
+      }
+      .user-info {
+        font-size: 0.9rem;
+      }
+      .welcome-screen .btn-loja {
+        font-size: 0.9rem;
+        padding: 10px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="sidebar" id="sidebar">
+    <img src="{{ url_for('static', filename='img/viacores.png') }}" alt="Logo ViaCores" class="logo">
+    <button class="toggle-btn" id="toggleSidebar">
+      <i class="bi bi-list"></i>
+    </button>
+    <div class="nav-title">Controle de EANs por Loja</div>
+    <ul class="nav flex-column">
+      <li class="nav-item">
+        <a class="nav-link" href="#" onclick="trocarUsuario()" title="Trocar Usuário">
+          <i class="bi bi-person-circle"></i>
+          <span>Trocar Usuário</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#" title="Sair">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Sair</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="user-info">
+      Usuário: <strong id="currentUser">Usuário Azul</strong>
+    </div>
+
+    <div id="welcomeScreen" class="welcome-screen">
+      <h2>Bem-vindo ao Controle de EAN por Loja</h2>
+      <p>Insira os SKUs e EANs:</p>
+      <div class="mb-3">
+        <textarea id="eanTextarea" rows="6" class="form-control" placeholder="Ex: FFTR017-175-F[TAB]7900022825861"></textarea>
+        <button onclick="processarEANs()" class="btn btn-success mt-2"><i class="bi bi-upload"></i> Cadastrar</button>
+      </div>
+      <p>Selecione uma loja para começar:</p>
+      <button class="btn btn-loja" onclick="showTab('loja1')">Loja 1</button>
+      <button class="btn btn-loja" onclick="showTab('loja2')">Loja 2</button>
+      <button class="btn btn-loja" onclick="showTab('loja3')">Loja 3</button>
+      <button class="btn btn-loja" onclick="showTab('loja4')">Loja 4</button>
+    </div>
+
+    <div id="loja1" class="tab-content">
+      <h2>Loja 1 - SKUs sem sufixo (-F, -P, -V)</h2>
+      <button class="btn btn-primary mb-3" onclick="voltarTelaInicial()"><i class="bi bi-arrow-left"></i> Voltar</button>
+      <div class="mb-4 d-flex align-items-center flex-wrap">
+        <div class="input-group w-50">
+          <input type="text" id="skuBuscaLoja1" class="form-control" placeholder="Ex: PVBC para prefixo ou PVBC001-100 para exato">
+          <button onclick="buscarSKU('loja1')" class="btn btn-primary"><i class="bi bi-search"></i> Buscar</button>
+        </div>
+      </div>
+      <div id="resultadoLoja1"></div>
+      <div class="mb-4">
+        <label><strong>Relatório de SKUs SEM check:</strong></label>
+        <div class="input-group w-50">
+          <select id="selectLoja1" class="form-select">
+            <option value="mercado">Mercado</option>
+            <option value="shopee">Shopee</option>
+            <option value="shein">Shein</option>
+            <option value="magalu">Magalu</option>
+            <option value="site">Site</option>
+          </select>
+          <select id="prefixoLoja1" class="form-select">
+            <option value="">Todos</option>
+            <option value="PR">PR</option>
+            <option value="PR-130">PR-130</option>
+            <option value="PV">PV</option>
+            <option value="PV-100">PV-100</option>
+            <option value="999-VF">999-VF</option>
+            <option value="FF">FF</option>
+            <option value="FF-175">FF-175</option>
+            <option value="PH">PH</option>
+            <option value="PC">PC</option>
+            <option value="KD">KD</option>
+            <option value="KC">KC</option>
+            <option value="VC">VC</option>
+            <option value="CL">CL</option>
+          </select>
+          <button onclick="gerarRelatorio('loja1')" class="btn btn-warning"><i class="bi bi-download"></i> Baixar PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="loja2" class="tab-content">
+      <h2>Loja 2 - SKUs terminados em -F</h2>
+      <button class="btn btn-primary mb-3" onclick="voltarTelaInicial()"><i class="bi bi-arrow-left"></i> Voltar</button>
+      <div class="mb-4 d-flex align-items-center flex-wrap">
+        <div class="input-group w-50">
+          <input type="text" id="skuBuscaLoja2" class="form-control" placeholder="Ex: PVBC para prefixo ou PVBC001-F para exato">
+          <button onclick="buscarSKU('loja2')" class="btn btn-primary"><i class="bi bi-search"></i> Buscar</button>
+        </div>
+      </div>
+      <div id="resultadoLoja2"></div>
+      <div class="mb-4">
+        <label><strong>Relatório de SKUs SEM check:</strong></label>
+        <div class="input-group w-50">
+          <select id="selectLoja2" class="form-select">
+            <option value="mercado">Mercado</option>
+            <option value="shopee">Shopee</option>
+            <option value="shein">Shein</option>
+            <option value="magalu">Magalu</option>
+            <option value="site">Site</option>
+          </select>
+          <select id="prefixoLoja2" class="form-select">
+            <option value="">Todos</option>
+            <option value="PR">PR</option>
+            <option value="PR-130">PR-130</option>
+            <option value="PV">PV</option>
+            <option value="PV-100">PV-100</option>
+            <option value="999-VF">999-VF</option>
+            <option value="FF">FF</option>
+            <option value="FF-175">FF-175</option>
+            <option value="PH">PH</option>
+            <option value="PC">PC</option>
+            <option value="KD">KD</option>
+            <option value="KC">KC</option>
+            <option value="VC">VC</option>
+            <option value="CL">CL</option>
+          </select>
+          <button onclick="gerarRelatorio('loja2')" class="btn btn-warning"><i class="bi bi-download"></i> Baixar PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="loja3" class="tab-content">
+      <h2>Loja 3 - SKUs terminados em -P</h2>
+      <button class="btn btn-primary mb-3" onclick="voltarTelaInicial()"><i class="bi bi-arrow-left"></i> Voltar</button>
+      <div class="mb-4 d-flex align-items-center flex-wrap">
+        <div class="input-group w-50">
+          <input type="text" id="skuBuscaLoja3" class="form-control" placeholder="Ex: PVBC para prefixo ou PVBC001-P para exato">
+          <button onclick="buscarSKU('loja3')" class="btn btn-primary"><i class="bi bi-search"></i> Buscar</button>
+        </div>
+      </div>
+      <div id="resultadoLoja3"></div>
+      <div class="mb-4">
+        <label><strong>Relatório de SKUs SEM check:</strong></label>
+        <div class="input-group w-50">
+          <select id="selectLoja3" class="form-select">
+            <option value="mercado">Mercado</option>
+            <option value="shopee">Shopee</option>
+            <option value="shein">Shein</option>
+            <option value="magalu">Magalu</option>
+            <option value="site">Site</option>
+          </select>
+          <select id="prefixoLoja3" class="form-select">
+            <option value="">Todos</option>
+            <option value="PR">PR</option>
+            <option value="PR-130">PR-130</option>
+            <option value="PV">PV</option>
+            <option value="PV-100">PV-100</option>
+            <option value="999-VF">999-VF</option>
+            <option value="FF">FF</option>
+            <option value="FF-175">FF-175</option>
+            <option value="PH">PH</option>
+            <option value="PC">PC</option>
+            <option value="KD">KD</option>
+            <option value="KC">KC</option>
+            <option value="VC">VC</option>
+            <option value="CL">CL</option>
+          </select>
+          <button onclick="gerarRelatorio('loja3')" class="btn btn-warning"><i class="bi bi-download"></i> Baixar PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="loja4" class="tab-content">
+      <h2>Loja 4 - SKUs terminados em -V</h2>
+      <button class="btn btn-primary mb-3" onclick="voltarTelaInicial()"><i class="bi bi-arrow-left"></i> Voltar</button>
+      <div class="mb-4 d-flex align-items-center flex-wrap">
+        <div class="input-group w-50">
+          <input type="text" id="skuBuscaLoja4" class="form-control" placeholder="Ex: PVBC para prefixo ou PVBC001-V para exato">
+          <button onclick="buscarSKU('loja4')" class="btn btn-primary"><i class="bi bi-search"></i> Buscar</button>
+        </div>
+      </div>
+      <div id="resultadoLoja4"></div>
+      <div class="mb-4">
+        <label><strong>Relatório de SKUs SEM check:</strong></label>
+        <div class="input-group w-50">
+          <select id="selectLoja4" class="form-select">
+            <option value="mercado">Mercado</option>
+            <option value="shopee">Shopee</option>
+            <option value="shein">Shein</option>
+            <option value="magalu">Magalu</option>
+            <option value="site">Site</option>
+          </select>
+          <select id="prefixoLoja4" class="form-select">
+            <option value="">Todos</option>
+            <option value="PR">PR</option>
+            <option value="PR-130">PR-130</option>
+            <option value="PV">PV</option>
+            <option value="PV-100">PV-100</option>
+            <option value="999-VF">999-VF</option>
+            <option value="FF">FF</option>
+            <option value="FF-175">FF-175</option>
+            <option value="PH">PH</option>
+            <option value="PC">PC</option>
+            <option value="KD">KD</option>
+            <option value="KC">KC</option>
+            <option value="VC">VC</option>
+            <option value="CL">CL</option>
+          </select>
+          <button onclick="gerarRelatorio('loja4')" class="btn btn-warning"><i class="bi bi-download"></i> Baixar PDF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Toggle do sidebar
+    document.getElementById('toggleSidebar').addEventListener('click', () => {
+      document.body.classList.toggle('sidebar-collapsed');
+      document.getElementById('sidebar').classList.toggle('collapsed');
+      document.getElementById('sidebar').classList.toggle('expanded');
+    });
+
+    // Estrutura de dados otimizada com mapas
+    const db = {
+      registros: {
+        loja1: new Map(), // Map<subloja, Map<sku, ean>>
+        loja2: new Map(),
+        loja3: new Map(),
+        loja4: new Map()
+      },
+      checks: new Map() // Map<sku|ean|loja|subloja, Set<cor>>
+    };
+
+    const corNome = {
+      blue: 'Usuário Azul',
+      red: 'Usuário Vermelho',
+      yellow: 'Usuário Amarelo',
+      orange: 'Usuário Laranja'
+    };
+
+    const senhas = {
+      blue: 'A',
+      red: 'V',
+      yellow: 'M',
+      orange: 'L'
+    };
+
+    const sublojas = ['mercado', 'shopee', 'shein', 'magalu', 'site'];
+
+    // Usuário atual
+    let corAtual = 'blue';
+    document.getElementById('currentUser').textContent = corNome[corAtual];
+
+    let ultimoSKU = {
+      loja1: '',
+      loja2: '',
+      loja3: '',
+      loja4: ''
+    };
+
+    // Função para validar SKU
+    function validarSKU(sku, tab) {
+      const suffix = sku.slice(-2);
+      if (tab === 'loja1') return !['-F', '-P', '-V'].includes(suffix);
+      if (tab === 'loja2') return suffix === '-F';
+      if (tab === 'loja3') return suffix === '-P';
+      if (tab === 'loja4') return suffix === '-V';
+      return false;
+    }
+
+    function trocarUsuario() {
+      const usuario = prompt('Digite o usuário (blue, red, yellow, orange):').toLowerCase();
+      if (!['blue', 'red', 'yellow', 'orange'].includes(usuario)) {
+        alert('Usuário inválido.');
+        return;
+      }
+      const senha = prompt(`Digite a senha para ${corNome[usuario]}:`);
+      if (senha === senhas[usuario]) {
+        corAtual = usuario;
+        document.getElementById('currentUser').textContent = corNome[corAtual];
+        alert(`Usuário alterado para ${corNome[usuario]}.`);
+        ['loja1', 'loja2', 'loja3', 'loja4'].forEach(tab => {
+          if (ultimoSKU[tab]) atualizarResultados(tab);
+        });
+      } else {
+        alert('Senha incorreta.');
+      }
+    }
+
+    function showTab(tabId) {
+      document.getElementById('welcomeScreen').style.display = 'none';
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      atualizarResultados(tabId);
+    }
+
+    function voltarTelaInicial() {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.getElementById('welcomeScreen').style.display = 'block';
+    }
+
+    function processarEANs() {
+      const textarea = document.getElementById('eanTextarea');
+      const texto = textarea.value.trim();
+      if (!texto) return;
+
+      const linhas = texto.split('\n');
+      let novos = 0;
+      let erros = 0;
+      const novosRegistros = { loja1: [], loja2: [], loja3: [], loja4: [] };
+
+      // Processar linhas
+      for (const linha of linhas) {
+        const [skuRaw, eanRaw] = linha.split('\t');
+        const sku = skuRaw?.trim().toUpperCase();
+        const ean = eanRaw?.trim();
+
+        if (!sku || !ean) {
+          erros++;
+          continue;
+        }
+
+        // Determinar aba com base no sufixo
+        let tab;
+        if (sku.endsWith('-F')) tab = 'loja2';
+        else if (sku.endsWith('-P')) tab = 'loja3';
+        else if (sku.endsWith('-V')) tab = 'loja4';
+        else tab = 'loja1';
+
+        if (!validarSKU(sku, tab)) {
+          erros++;
+          continue;
+        }
+
+        novosRegistros[tab].push({ sku, ean });
+      }
+
+      // Cadastrar em todas as sublojas
+      for (const tab of ['loja1', 'loja2', 'loja3', 'loja4']) {
+        const registrosTab = db.registros[tab];
+        for (const { sku, ean } of novosRegistros[tab]) {
+          for (const subloja of sublojas) {
+            if (!registrosTab.has(subloja)) registrosTab.set(subloja, new Map());
+            const sublojaMap = registrosTab.get(subloja);
+            if (!sublojaMap.has(sku)) {
+              sublojaMap.set(sku, ean);
+              novos++;
+            }
+          }
+        }
+      }
+
+      alert(`Cadastrados: ${novos} novo(s). Erros: ${erros} (SKU inválido ou formato incorreto).`);
+      textarea.value = '';
+      ['loja1', 'loja2', 'loja3', 'loja4'].forEach(tab => {
+        if (ultimoSKU[tab]) atualizarResultados(tab);
+      });
+    }
+
+    function buscarSKU(tab) {
+      const skuBusca = document.getElementById(`skuBusca${tab.charAt(0).toUpperCase() + tab.slice(1)}`).value.trim().toUpperCase();
+      ultimoSKU[tab] = skuBusca;
+      atualizarResultados(tab);
+    }
+
+    function copiarTexto(texto) {
+      navigator.clipboard.writeText(texto).then(() => {
+        alert('Copiado para a área de transferência!');
+      }).catch(() => {
+        alert('Falha ao copiar.');
+      });
+    }
+
+    function atualizarResultados(tab) {
+      const skuBusca = ultimoSKU[tab];
+      const resultado = document.getElementById(`resultado${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+
+      resultado.innerHTML = '';
+
+      if (!skuBusca) {
+        resultado.innerHTML = '<div class="alert alert-warning">Digite um SKU e pressione Enter ou clique em Buscar.</div>';
+        return;
+      }
+
+      // Coletar SKUs encontrados por subloja
+      const skusEncontrados = new Map(); // Map<sku, Map<subloja, ean>>
+      for (const subloja of sublojas) {
+        if (!db.registros[tab].has(subloja)) continue;
+        const sublojaMap = db.registros[tab].get(subloja);
+        for (const [sku, ean] of sublojaMap) {
+          if (skuBusca === sku || sku.startsWith(skuBusca)) {
+            if (validarSKU(sku, tab)) { // Validação de sufixo
+              if (!skusEncontrados.has(sku)) skusEncontrados.set(sku, new Map());
+              skusEncontrados.get(sku).set(subloja, ean);
+            }
+          }
+        }
+      }
+
+      if (skusEncontrados.size === 0) {
+        resultado.innerHTML = '<div class="alert alert-warning">Nenhum resultado encontrado.</div>';
+        return;
+      }
+
+      // Construir tabela
+      let html = `
+        <div class="card-sku">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>EAN</th>
+                <th>Mercado</th>
+                <th>Shopee</th>
+                <th>Shein</th>
+                <th>Magalu</th>
+                <th>Site</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      // Para cada SKU encontrado
+      for (const [sku, sublojaEans] of skusEncontrados) {
+        const ean = sublojaEans.values().next().value || 'N/A';
+        html += `
+          <tr>
+            <td class="sku-ean-column">
+              <strong>${sku}</strong>
+              <button class="btn btn-copy" onclick="copiarTexto('${sku}')"><i class="bi bi-clipboard"></i> Copiar</button>
+            </td>
+            <td class="sku-ean-column">
+              ${ean}
+              <button class="btn btn-copy" onclick="copiarTexto('${ean}')"><i class="bi bi-clipboard"></i> Copiar</button>
+            </td>
+        `;
+        for (const subloja of sublojas) {
+          html += '<td>';
+          if (sublojaEans.has(subloja)) {
+            const ean = sublojaEans.get(subloja);
+            const key = `${sku}|${ean}|${tab}|${subloja}`;
+            const checks = db.checks.get(key) || new Set();
+            const checked = checks.has(corAtual);
+            const isCheckedByOther = checks.size > 0 && !checked;
+
+            let corBtn = 'secondary';
+            if (checks.has('blue')) corBtn = 'primary';
+            else if (checks.has('red')) corBtn = 'danger';
+            else if (checks.has('yellow')) corBtn = 'warning';
+            else if (checks.has('orange')) corBtn = 'orange';
+
+            html += `
+              <button 
+                class="btn btn-sm btn-${corBtn} btn-check-loja" 
+                onclick="checkLoja('${sku}','${ean}','${tab}','${subloja}')"
+                ${checked ? '' : isCheckedByOther ? 'disabled' : ''}
+                title="${checked ? 'Clique para remover seu check (requer senha)' : isCheckedByOther ? 'Check já realizado por outro usuário' : 'Dar check'}">
+                <i class="bi ${checked || isCheckedByOther ? 'bi-check-circle-fill' : 'bi-circle'}"></i>
+              </button>
+            `;
+          }
+          html += '</td>';
+        }
+        html += '</tr>';
+      }
+
+      html += '</tbody></table></div>';
+      resultado.innerHTML = html;
+    }
+
+    function checkLoja(sku, ean, tab, subloja) {
+      const key = `${sku}|${ean}|${tab}|${subloja}`;
+      let checks = db.checks.get(key) || new Set();
+
+      if (checks.has(corAtual)) {
+        const senha = prompt('Digite a senha para remover o check:');
+        if (senha === senhas[corAtual]) {
+          checks.delete(corAtual);
+          if (checks.size === 0) db.checks.delete(key);
+          else db.checks.set(key, checks);
+          alert('Check removido com sucesso.');
+        } else {
+          alert('Senha incorreta. O check não foi removido.');
+        }
+      } else if (checks.size === 0) {
+        checks.add(corAtual);
+        db.checks.set(key, checks);
+      }
+      atualizarResultados(tab);
+    }
+
+    function gerarRelatorio(tab) {
+      const subloja = document.getElementById(`select${tab.charAt(0).toUpperCase() + tab.slice(1)}`).value;
+      const prefixo = document.getElementById(`prefixo${tab.charAt(0).toUpperCase() + tab.slice(1)}`).value;
+      if (!db.registros[tab].has(subloja)) return;
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const margem = 5;
+      const larguraPagina = 210;
+      const larguraUtil = larguraPagina - 2 * margem;
+      const larguraColuna = 30;
+      const colunas = Math.floor(larguraUtil / larguraColuna);
+      const alturaLinha = 8;
+      let y = 20;
+
+      doc.setFontSize(16);
+      doc.text(`SKUs Faltantes - ${tab.toUpperCase()} (${subloja}) ${prefixo ? `Prefixo: ${prefixo}` : ''}`, margem, 10);
+
+      const sublojaMap = db.registros[tab].get(subloja);
+      const skusFaltantes = [];
+
+      for (const [sku, ean] of sublojaMap) {
+        const key = `${sku}|${ean}|${tab}|${subloja}`;
+        if ((!db.checks.has(key) || db.checks.get(key).size === 0) && (!prefixo || sku.startsWith(prefixo))) {
+          skusFaltantes.push(sku);
+        }
+      }
+
+      doc.setFontSize(10);
+      for (let i = 0; i < skusFaltantes.length; i += colunas) {
+        const linha = skusFaltantes.slice(i, i + colunas);
+        linha.forEach((sku, index) => {
+          if (sku) {
+            const x = margem + index * larguraColuna;
+            doc.text(sku, x, y);
+          }
+        });
+        y += alturaLinha;
+        if (y > 280) {
+          doc.addPage();
+          y = 10;
+        }
+      }
+
+      doc.save(`faltando_${tab}_${subloja}${prefixo ? `_${prefixo}` : ''}.pdf`);
+    }
+
+    // Event listeners
+    ['loja1', 'loja2', 'loja3', 'loja4'].forEach(tab => {
+      const input = document.getElementById(`skuBusca${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+      input.addEventListener('keypress', e => {
+        if (e.key === 'Enter') buscarSKU(tab);
+      });
+    });
+
+    document.getElementById('eanTextarea').addEventListener('keypress', e => {
+      if (e.key === 'Enter' && e.ctrlKey) {
+        e.preventDefault();
+        processarEANs();
+      }
+    });
+  </script>
+</body>
+</html>

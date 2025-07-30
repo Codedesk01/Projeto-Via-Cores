@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Estoque - ViaCores</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/Logo.png') }}" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+      body {
+    background: linear-gradient(180deg, #f4f7fa 0%, #ebedf0 100%);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    margin: 0;
+    padding-left: 280px;
+    transition: padding-left 0.3s ease;
+    color: #2d3748;
+}
+
+body.sidebar-collapsed {
+    padding-left: 88px;
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 280px;
+    background: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    padding: 32px 20px;
+    transition: width 0.3s ease;
+    z-index: 1000;
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.06);
+}
+
+.sidebar.collapsed {
+    width: 88px;
+}
+
+.sidebar .logo {
+    max-width: 200px;
+    display: block;
+    margin: 0 auto 32px;
+    transition: max-width 0.3s ease;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.sidebar.collapsed .logo {
+    max-width: 60px;
+}
+
+.sidebar .nav-title {
+    color: #1a3c87;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 20px 0;
+    text-align: center;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.sidebar.collapsed .nav-title {
+    display: none;
+}
+
+.sidebar .nav-link {
+    color: #4a5568;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-radius: 10px;
+    margin: 6px 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar .nav-link:hover {
+    background: linear-gradient(90deg, #e0e7ff 0%, #dbeafe 100%);
+    color: #1a3c87;
+    transform: translateX(6px);
+}
+
+.sidebar .nav-link::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: #1a3c87;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.sidebar .nav-link:hover::before {
+    opacity: 1;
+}
+
+.sidebar .nav-link i {
+    font-size: 1.35rem;
+    transition: transform 0.25s ease;
+}
+
+.sidebar .nav-link:hover i {
+    transform: rotate(10deg) scale(1.2);
+}
+
+.sidebar .nav-link span {
+    display: inline-block;
+}
+
+.sidebar.collapsed .nav-link span {
+    display: none;
+}
+
+.sidebar .toggle-btn {
+    background: none;
+    border: none;
+    color: #4a5568;
+    font-size: 1.75rem;
+    padding: 14px;
+    width: 100%;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.sidebar .toggle-btn:hover {
+    color: #1a3c87;
+    transform: scale(1.1);
+}
+
+.container {
+    max-width: 1440px;
+    margin: 32px auto;
+    padding: 0 20px;
+}
+
+.card {
+    background: #ffffff;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+    margin-bottom: 32px;
+    padding: 32px;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    transform: translateY(-4px);
+}
+
+h1 {
+    color: #1a3c87;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 32px;
+    text-align: center;
+    letter-spacing: -0.02em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.search-container .input-group {
+    max-width: 720px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.search-container input {
+    border: 1px solid #d1d5db;
+    border-radius: 12px 0 0 12px;
+    font-size: 1.1rem;
+    padding: 14px 20px;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.search-container input:focus {
+    border-color: #1a3c87;
+    box-shadow: 0 0 0 4px rgba(26, 60, 135, 0.15);
+    background: #ffffff;
+}
+
+.search-container .btn-search {
+    background: linear-gradient(135deg, #1a3c87 0%, #2b528a 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 0 12px 12px 0;
+    padding: 14px 24px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.search-container .btn-search:hover {
+    background: linear-gradient(135deg, #15306b 0%, #1e406f 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.notification {
+    position: relative;
+    margin: 20px auto;
+    padding: 14px 48px 14px 20px;
+    border-radius: 10px;
+    max-width: 720px;
+    opacity: 0;
+    transform: translateY(-16px);
+    transition: all 0.4s ease;
+    font-size: 1rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.notification.error {
+    background: #fef2f2;
+    color: #9b1c1c;
+    border-left: 5px solid #9b1c1c;
+}
+
+.notification.success {
+    background: #ecfdf5;
+    color: #065f46;
+    border-left: 5px solid #065f46;
+}
+
+.notification .close-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    cursor: pointer;
+    font-size: 16px;
+    color: inherit;
+    opacity: 0.8;
+    transition: all 0.2s ease;
+}
+
+.notification .close-btn:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+#notificationsContainer {
+    margin: 20px 0;
+}
+
+#resultsContainer {
+    overflow-x: auto;
+}
+
+#resultsContainer .table {
+    font-size: 1rem;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+#resultsContainer .table th,
+#resultsContainer .table td {
+    text-align: center;
+    vertical-align: middle;
+    padding: 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+#resultsContainer .table th {
+    background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+    font-weight: 700;
+    color: #1f2937;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+}
+
+.sku-image, .image-placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: block;
+    margin: 0 auto;
+    transition: all 0.3s ease;
+}
+
+.sku-image:hover, .image-placeholder:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.sku-image {
+    object-fit: cover;
+    display: none;
+    border: 2px solid #e5e7eb;
+}
+
+.sku-image.loaded {
+    display: block;
+}
+
+.image-placeholder {
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    font-size: 0.9rem;
+    text-align: center;
+    border: 2px solid #e5e7eb;
+}
+
+.modal-full-image {
+    max-width: 90vw;
+    max-height: 80vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.modal-dialog {
+    max-width: 95vw;
+    margin: 2.5rem auto;
+}
+
+.modal-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    padding: 32px;
+    background: #f9fafb;
+    border-radius: 12px;
+}
+
+.alert {
+    max-width: 720px;
+    margin: 20px auto;
+    font-size: 1rem;
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1e40af;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+#resultsContainer table.table tbody tr.linha-reservada {
+    background: #fef9c3 !important;
+    color: #713f12 !important;
+}
+
+#resultsContainer table.table-striped tbody tr.linha-reservada {
+    background: #fef9c3 !important;
+}
+
+#resultsContainer table.table tbody tr.linha-reservada td {
+    background: #fef9c3 !important;
+}
+
+footer {
+    color: #6b7280;
+    font-size: 0.9rem;
+    padding: 20px 0;
+    border-top: 1px solid #e5e7eb;
+    text-align: center;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+@media (max-width: 992px) {
+    body {
+        padding-left: 88px;
+    }
+
+    body.sidebar-collapsed {
+        padding-left: 0;
+    }
+
+    .sidebar {
+        width: 88px;
+    }
+
+    .sidebar.expanded {
+        width: 260px;
+    }
+
+    .sidebar .logo {
+        max-width: 60px;
+    }
+
+    .sidebar.expanded .logo {
+        max-width: 180px;
+    }
+
+    .sidebar .nav-title {
+        display: none;
+    }
+
+    .sidebar.expanded .nav-title {
+        display: block;
+    }
+
+    .sidebar .nav-link span {
+        display: none;
+    }
+
+    .sidebar.expanded .nav-link span {
+        display: inline-block;
+    }
+
+    .container {
+        max-width: 95vw;
+        padding: 0 16px;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .search-container .input-group {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        margin: 20px auto;
+    }
+
+    .card {
+        padding: 16px;
+    }
+
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    .search-container input {
+        font-size: 1rem;
+        padding: 12px 16px;
+    }
+
+    .search-container .btn-search {
+        padding: 12px 20px;
+        font-size: 1rem;
+    }
+
+    .notification {
+        font-size: 0.9rem;
+        padding: 12px 40px 12px 16px;
+    }
+
+    .table {
+        font-size: 0.9rem;
+    }
+
+    .table th, .table td {
+        padding: 12px;
+    }
+
+    .sku-image, .image-placeholder {
+        width: 44px;
+        height: 44px;
+        font-size: 0.8rem;
+    }
+
+    .modal-full-image {
+        max-height: 70vh;
+    }
+
+    .alert {
+        font-size: 0.9rem;
+        padding: 12px;
+    }
+}
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <img src="{{ url_for('static', filename='img/viacores.png') }}" alt="Logo ViaCores" class="logo">
+        <button class="toggle-btn" id="toggleSidebar">
+            <i class="bi bi-list"></i>
+        </button>
+        <div class="nav-title">Consulta de Estoque</div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('logout') }}" title="Sair">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Sair</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert alert-info" role="alert">
+                    {% for category, message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Search Card -->
+        <div class="card">
+            <h1><i class="bi bi-boxes me-2"></i>Consulta de Estoque</h1>
+            <div class="search-container">
+                <form id="searchForm">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="skuSearch" placeholder="SKU, prefixo ou tema (ex: PVSE, PCRV, Floral)">
+                        <button type="submit" class="btn btn-search"><i class="bi bi-search"></i></button>
+                    </div>
+                </form>
+            </div>
+            <div id="notificationsContainer"></div>
+        </div>
+
+        <!-- Results Card -->
+        <div class="card">
+            <div id="resultsContainer"></div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Imagem do SKU</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <img id="modalImage" src="" alt="Imagem do SKU" class="modal-full-image" style="display: none;">
+                    <div id="modalImagePlaceholder" class="image-placeholder" style="width: 100%; height: 200px; line-height: 200px; font-size: 1rem;">Imagem não disponível</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+        <footer class="text-center mt-4 text-muted">
+            ViaCores ERP - Versão 4.3 | Desenvolvido por ViaCores
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar Toggle
+        const sidebar = document.getElementById('sidebar');
+        const toggleSidebarBtn = document.getElementById('toggleSidebar');
+        toggleSidebarBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            document.body.classList.toggle('sidebar-collapsed');
+            if (window.innerWidth <= 992) {
+                sidebar.classList.toggle('expanded');
+            }
+        });
+
+        function showNotification(text, type, container) {
+            console.log(`[Client] Notificação: ${text} (${type})`);
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                ${text}
+                <span class="close-btn">×</span>
+            `;
+            container.appendChild(notification);
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+            notification.querySelector('.close-btn').addEventListener('click', () => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            });
+        }
+
+        function showImageModal(sku) {
+            console.log(`[Client] Abrindo modal para SKU: ${sku}`);
+            const modalImage = document.getElementById('modalImage');
+            const modalPlaceholder = document.getElementById('modalImagePlaceholder');
+            const modalTitle = document.getElementById('imageModalLabel');
+            modalTitle.textContent = `Imagem do SKU: ${sku}`;
+            modalImage.src = `/get_apr_image/${encodeURIComponent(sku)}?t=${new Date().getTime()}`; // Changed to get_apr_image
+            modalImage.style.display = 'none';
+            modalPlaceholder.style.display = 'flex';
+
+            modalImage.onload = function() {
+                console.log(`[Client] Imagem carregada para SKU: ${sku}, tamanho: ${this.naturalWidth}x${this.naturalHeight}`);
+                modalImage.style.display = 'block';
+                modalPlaceholder.style.display = 'none';
+                modalImage.style.width = `${this.naturalWidth}px`;
+                modalImage.style.height = `${this.naturalHeight}px`;
+            };
+            modalImage.onerror = function() {
+                console.log(`[Client] Falha ao carregar imagem para SKU: ${sku}`);
+                modalImage.style.display = 'none';
+                modalPlaceholder.style.display = 'flex';
+            };
+
+            const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+            modal.show();
+        }
+
+        function updateTable(items) {
+            console.log('[Client] Atualizando tabela com itens:', items);
+            const resultsContainer = document.getElementById('resultsContainer');
+            resultsContainer.innerHTML = '';
+
+            if (!items || items.length === 0) {
+                resultsContainer.innerHTML = '<p class="text-center text-muted">Nenhum item encontrado.</p>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'table table-striped';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>SKU</th>
+                        <th>Quantidade</th>
+                        <th>Caixa</th>
+                        <th>Imagem</th>
+                        <th>Reserva</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+
+            const tbody = table.querySelector('tbody');
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                const reservado = item.reservado;
+                row.className = reservado ? 'linha-reservada' : '';
+                if (reservado) {
+                    row.style.backgroundColor = '#ffc107';
+                } else {
+                    row.style.backgroundColor = '';
+                }
+                const btnClass = reservado ? 'btn-warning' : 'btn-outline-warning';
+                const btnText = reservado ? 'Reservado' : 'Reservar';
+                row.innerHTML = `
+                    <td>${item.codigo}</td>
+                    <td>${item.quantidade}</td>
+                    <td>${item.caixa}</td>
+                    <td>
+                        <img src="/get_apr_image/${encodeURIComponent(item.codigo)}?t=${new Date().getTime()}" class="sku-image" alt="Imagem de ${item.codigo}" data-sku="${item.codigo}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <div class="image-placeholder" data-sku="${item.codigo}">Sem Imagem</div>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm ${btnClass} reservar-btn" data-sku="${item.codigo}">
+                            <i class="bi bi-flag-fill"></i> ${btnText}
+                        </button>
+                    </td>
+                `;
+                console.log(`[Client] Linha criada para SKU ${item.codigo}: reservado=${reservado}, classList=${row.className}`);
+                tbody.appendChild(row);
+            });
+
+            resultsContainer.appendChild(table);
+
+            document.querySelectorAll('.sku-image').forEach(img => {
+                img.addEventListener('load', function() {
+                    this.classList.add('loaded');
+                    this.nextElementSibling.style.display = 'none';
+                });
+                img.addEventListener('error', function() {
+                    this.style.display = 'none';
+                    this.nextElementSibling.style.display = 'flex';
+                });
+                img.addEventListener('click', function() {
+                    const sku = this.getAttribute('data-sku');
+                    showImageModal(sku);
+                });
+                if (img.complete) {
+                    if (img.naturalWidth > 0) {
+                        img.dispatchEvent(new Event('load'));
+                    } else {
+                        img.dispatchEvent(new Event('error'));
+                    }
+                }
+            });
+
+            document.querySelectorAll('.image-placeholder').forEach(placeholder => {
+                placeholder.addEventListener('click', function() {
+                    const sku = this.getAttribute('data-sku');
+                    showImageModal(sku);
+                });
+            });
+        }
+
+        function performSearch(searchInput) {
+            const trimmedInput = searchInput.trim();
+            if (!trimmedInput) {
+                showNotification('Por favor, insira um SKU, prefixo ou tema válido.', 'error', document.getElementById('notificationsContainer'));
+                return;
+            }
+
+            console.log(`[Client] Iniciando pesquisa: "${trimmedInput}"`);
+            const isTemaSearch = trimmedInput.includes(' ');
+            const endpoint = isTemaSearch ? '/buscar_por_tema' : '/search_item';
+            const param = isTemaSearch ? `tema=${encodeURIComponent(trimmedInput)}` : `sku=${encodeURIComponent(trimmedInput)}`;
+            const url = `${endpoint}?${param}`;
+
+            console.log(`[Client] Enviando requisição para: ${url}`);
+            fetch(url, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                console.log(`[Client] Resposta recebida: ${response.status} ${response.statusText}`);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`Erro ${response.status}: ${text || response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('[Client] Dados recebidos:', data);
+                let items = [];
+                if (isTemaSearch) {
+                    items = data.success && Array.isArray(data.items) ? data.items : [];
+                } else {
+                    items = Array.isArray(data.items) ? data.items : [];
+                }
+
+                if (items.length === 0) {
+                    showNotification('Nenhum item encontrado para a pesquisa.', 'error', document.getElementById('notificationsContainer'));
+                } else {
+                    showNotification(`Encontrados ${items.length} item(s).`, 'success', document.getElementById('notificationsContainer'));
+                }
+
+                updateTable(items);
+                const searchInputElement = document.getElementById('skuSearch');
+                searchInputElement.select();
+            })
+            .catch(error => {
+                console.error('[Client] Erro na pesquisa:', error);
+                showNotification(`Erro ao realizar pesquisa: ${error.message}`, 'error', document.getElementById('notificationsContainer'));
+                updateTable([]);
+            });
+        }
+
+        document.getElementById('searchForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            console.log('[Client] Formulário submetido');
+            performSearch(document.getElementById('skuSearch').value);
+        });
+
+        document.getElementById('skuSearch').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                console.log('[Client] Tecla Enter pressionada no campo de pesquisa');
+                performSearch(this.value);
+            }
+        });
+
+        window.addEventListener('load', function() {
+            console.log('[Client] Página carregada, focando no campo de pesquisa');
+            document.getElementById('skuSearch').focus();
+            if (window.innerWidth <= 992) {
+                sidebar.classList.add('collapsed');
+                document.body.classList.add('sidebar-collapsed');
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.reservar-btn');
+            if (!btn) return;
+
+            const sku = btn.dataset.sku;
+            console.log(`[Client] Tentando reservar/solto SKU: ${sku}`);
+            fetch(`/toggle_reserva/${sku}`, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const isReservado = data.reservado === 1;
+                    const row = btn.closest('tr');
+                    row.classList.toggle('linha-reservada', isReservado);
+                    row.style.backgroundColor = isReservado ? '#ffc107' : '';
+                    btn.classList.toggle('btn-outline-warning', !isReservado);
+                    btn.classList.toggle('btn-warning', isReservado);
+                    btn.innerHTML = `<i class="bi bi-flag-fill"></i> ${isReservado ? 'Reservado' : 'Reservar'}`;
+                    console.log(`[Client] Linha para SKU ${sku} atualizada: reservado=${isReservado}, classList=${row.className}`);
+                    showNotification(`Item ${sku} ${isReservado ? 'reservado' : 'solto'} com sucesso!`, 'success', document.getElementById('notificationsContainer'));
+                } else {
+                    showNotification(`Erro: ${data.error || 'Falha ao alterar reserva.'}`, 'error', document.getElementById('notificationsContainer'));
+                }
+            })
+            .catch(error => {
+                console.error('[Client] Erro ao reservar/solto:', error);
+                showNotification(`Erro ao alterar reserva: ${error.message}`, 'error', document.getElementById('notificationsContainer'));
+            });
+        });
+    </script>
+</body>
+</html>

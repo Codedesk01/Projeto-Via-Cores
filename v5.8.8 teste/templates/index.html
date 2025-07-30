@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque - ViaCores</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/Logo.png') }}" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #f8fafc;
+            --accent-color: #06b6d4;
+            --text-color: #1e293b;
+            --border-radius: 10px;
+            --shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease-in-out;
+            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --button-padding: 10px 20px;
+            --button-font-size: 0.95rem;
+            --button-min-width: 120px;
+            --reserve-button-color: #f59e0b;
+            --reserve-button-hover: #d97706;
+            --reserve-button-selected: #b45309;
+            --image-button-color: #9ca3af;
+            --image-button-hover: #6b7280;
+            --image-button-selected: #4b5563;
+            --sidebar-width-collapsed: 80px;
+            --sidebar-width-expanded: 250px;
+        }
+
+        body {
+            background-color: var(--secondary-color);
+            font-family: var(--font-primary);
+            margin: 0;
+            padding-top: 70px;
+            transition: var(--transition);
+            overflow-x: hidden;
+            color: var(--text-color);
+            line-height: 1.7;
+        }
+
+        .navbar-custom {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background-color: #fff;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            padding: 0 20px;
+        }
+
+        .navbar-custom .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-custom .navbar-brand img {
+            max-height: 40px;
+        }
+
+        .navbar-custom .nav-link {
+            color: var(--text-color);
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 10px 15px;
+            transition: var(--transition);
+        }
+
+        .navbar-custom .nav-link:hover {
+            color: var(--accent-color);
+            background-color: #f1f5f9;
+            border-radius: var(--border-radius);
+        }
+
+        .navbar-custom .metrics {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            align-items: center;
+        }
+
+        .navbar-custom .metric {
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .navbar-custom .metric i {
+            color: var(--accent-color);
+            font-size: 1.2rem;
+        }
+
+        .navbar-custom .navbar-toggler {
+            border: none;
+            font-size: 1.2rem;
+        }
+
+        .navbar-custom .navbar-collapse {
+            background-color: #fff;
+        }
+
+        @media (max-width: 991px) {
+            .navbar-custom .navbar-collapse {
+                padding: 10px;
+                background-color: var(--primary-color);
+            }
+            .navbar-custom .nav-link {
+                color: #fff !important;
+                padding: 12px 20px;
+            }
+            .navbar-custom .nav-link:hover {
+                background-color: rgba(255, 255, 255, 0.2);
+                color: #fff !important;
+            }
+            .navbar-custom .metrics {
+                display: none;
+            }
+        }
+
+        .container-fluid {
+            padding: 50px;
+        }
+
+        .erp-tab-content {
+            background: #fff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .nav-tabs {
+            border-bottom: 3px solid #e2e8f0;
+            margin-bottom: 30px;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--text-color);
+            font-weight: 700;
+            padding: 14px 32px;
+            border: none;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--accent-color);
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--accent-color);
+            background-color: #f1f5f9;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+        }
+
+        h1, h2, h3 {
+            color: var(--primary-color);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+        }
+
+        .btn-custom, .btn-add, .btn-remove, .btn-confirm-remove, .btn-print, .btn-image, .btn-warning, .btn-info, .btn-primary, .btn-secondary, .btn-success, .reservar-btn, .lock-btn, .save-btn {
+            padding: var(--button-padding);
+            font-size: var(--button-font-size);
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: var(--button-min-width);
+            justify-content: center;
+            line-height: 1.2;
+        }
+
+        .btn-custom {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+
+        .btn-custom:hover {
+            background-color: #152c6e;
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-add {
+            background-color: #22c55e;
+            color: #fff;
+        }
+
+        .btn-add:hover {
+            background-color: #16a34a;
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-add.selected {
+            background-color: #15803d;
+        }
+
+        .btn-remove {
+            background-color: #ef4444;
+            color: #fff;
+        }
+
+        .btn-remove:hover {
+            background-color: #dc2626;
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-remove.selected {
+            background-color: #b91c1c;
+        }
+
+        .btn-confirm-remove {
+            background-color: #ef4444;
+            color: #fff;
+        }
+
+        .btn-confirm-remove:hover {
+            background-color: #dc2626;
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-print {
+            background-color: #6b7280;
+            color: #fff;
+        }
+
+        .btn-print:hover {
+            background-color: #4b5563;
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-print.selected {
+            background-color: #374151;
+        }
+
+        .reservar-btn {
+            background-color: var(--reserve-button-color);
+            color: #fff;
+        }
+
+        .reservar-btn:hover {
+            background-color: var(--reserve-button-hover);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .reservar-btn.selected {
+            background-color: var(--reserve-button-selected);
+        }
+
+        .btn-image {
+            background-color: var(--image-button-color);
+            color: #fff;
+        }
+
+        .btn-image:hover {
+            background-color: var(--image-button-hover);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-image.selected {
+            background-color: var(--image-button-selected);
+        }
+
+        .btn-info {
+            background-color: #3b82f6;
+            color: #fff;
+        }
+
+        .btn-info:hover {
+            background-color: #2563eb;
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-primary {
+            background-color: #2563eb;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-secondary {
+            background-color: #6b7280;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background-color: #4b5563;
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-success, .save-btn {
+            background-color: #22c55e;
+            color: #fff;
+        }
+
+        .btn-success:hover, .save-btn:hover {
+            background-color: #16a34a;
+            box-shadow: var(--shadow-hover);
+        }
+
+        .lock-btn {
+            background-color: #f59e0b;
+            color: #fff;
+        }
+
+        .lock-btn:hover {
+            background-color: #d97706;
+            box-shadow: var(--shadow-hover);
+        }
+
+        .form-label {
+            font-weight: 700;
+            color: var(--text-color);
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .form-control, .form-select {
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            border: 1px solid #d1d5db;
+            padding: 12px;
+            transition: var(--transition);
+            background-color: #fff;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+            outline: none;
+        }
+
+        .total-items {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            background-color: #f1f5f9;
+            padding: 12px 24px;
+            border-radius: var(--border-radius);
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .icon-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+        }
+
+        .scanner-section {
+            margin-bottom: 30px;
+        }
+
+        .scanner-fields {
+            display: none;
+        }
+
+        .scanner-fields.active {
+            display: block;
+        }
+
+        #scannerInput {
+            border: 2px solid var(--primary-color);
+            transition: var(--transition);
+            font-size: 1rem;
+        }
+
+        #scannerInput:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+        }
+
+        .notification {
+            position: relative;
+            margin-top: 16px;
+            padding: 16px 48px 16px 20px;
+            border-radius: var(--border-radius);
+            opacity: 0;
+            transition: var(--transition);
+            font-size: 1rem;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+        .notification.success {
+            background-color: #e7f6ec;
+            color: #166534;
+            border-left: 5px solid #22c55e;
+        }
+
+        .notification.error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border-left: 5px solid #ef4444;
+        }
+
+        .notification.info {
+            background-color: #e0f2fe;
+            color: #1e40af;
+            border-left: 5px solid #3b82f6;
+        }
+
+        .notification .close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            cursor: pointer;
+            font-size: 18px;
+            color: inherit;
+            opacity: 0.6;
+            transition: var(--transition);
+        }
+
+        .notification .close-btn:hover {
+            opacity: 1;
+        }
+
+        #notificationsContainer, #addRemoveNotifications, #results {
+            margin-top: 16px;
+        }
+
+        #results table th, #results table td {
+            text-align: center;
+            vertical-align: middle;
+            font-size: 1rem;
+            padding: 14px;
+        }
+
+        #results table th {
+            background-color: #f1f5f9;
+            font-weight: 700;
+            color: var(--primary-color);
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        #results table tbody tr:hover {
+            background-color: #f9fafb;
+            transition: var(--transition);
+        }
+
+        .editable-field {
+            width: 140px;
+            font-size: 1rem;
+            border-radius: var(--border-radius);
+            padding: 10px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        #skusWithoutCaixaAlert {
+            margin-bottom: 30px;
+        }
+
+        .sku-image {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: none;
+            border: 1px solid #e2e8f0;
+            transition: var(--transition);
+        }
+
+        .sku-image:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .sku-image.loaded {
+            display: block;
+        }
+
+        .image-placeholder {
+            width: 70px;
+            height: 70px;
+            background-color: #f1f5f9;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-size: 0.9rem;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+            transition: var(--transition);
+        }
+
+        .image-placeholder:hover {
+            background-color: #e5e7eb;
+            box-shadow: var(--shadow-hover);
+        }
+
+        .modal-full-image {
+            max-width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+            border-radius: var(--border-radius);
+            border: 1px solid #e2e8f0;
+            box-shadow: var(--shadow);
+        }
+
+        .modal-content {
+            border-radius: var(--border-radius);
+            border: none;
+            box-shadow: var(--shadow);
+        }
+
+        .modal-backdrop {
+            z-index: 1040 !important;
+        }
+
+        .modal {
+            z-index: 1050 !important;
+        }
+
+        #results table.table tbody tr.linha-reservada {
+            background-color: #fef3c7 !important;
+            color: var(--text-color) !important;
+        }
+
+        #results table.table-striped tbody tr.linha-reservada {
+            background-color: #fef3c7 !important;
+        }
+
+        #results table.table tbody tr.linha-reservada td {
+            background-color: #fef3c7 !important;
+        }
+
+        footer {
+            font-size: 0.95rem;
+            
+            font-weight: 600;
+            color: #6b7280;
+            padding: 30px 0;
+            border-top: 1px solid #e2e8f0;
+            background-color: #fff;
+            box-shadow: var(--shadow);
+        }
+
+        @media (max-width: 992px) {
+            body {
+                padding-top: 60px;
+            }
+
+            .container-fluid {
+                padding: 30px;
+            }
+
+            .erp-tab-content {
+                padding: 25px;
+            }
+
+            .form-control, .form-select {
+                font-size: 0.95rem;
+                padding: 10px;
+            }
+
+            .btn-custom, .btn-add, .btn-remove, .btn-confirm-remove, .btn-print, .btn-image, .btn-warning, .btn-info, .btn-primary, .btn-secondary, .btn-success, .reservar-btn, .lock-btn, .save-btn {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+                min-width: 100px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .erp-tab-content {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            h2 {
+                font-size: 1.4rem;
+            }
+
+            h3 {
+                font-size: 1.2rem;
+            }
+
+            .total-items {
+                font-size: 1.1rem;
+            }
+
+            .scanner-section .d-flex {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .form-control, .form-select {
+                font-size: 0.9rem;
+                padding: 10px;
+            }
+
+            .btn-custom, .btn-add, .btn-remove, .btn-confirm-remove, .btn-print, .btn-image, .btn-warning, .btn-info, .btn-primary, .btn-secondary, .btn-success, .reservar-btn, .lock-btn, .save-btn {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+                min-width: 90px;
+            }
+
+            .sku-image, .image-placeholder {
+                width: 60px;
+                height: 60px;
+                font-size: 0.85rem;
+            }
+
+            .modal-full-image {
+                max-height: 350px;
+            }
+
+            #results table th, #results table td {
+                font-size: 0.9rem;
+                padding: 12px;
+            }
+
+            .editable-field {
+                width: 120px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-custom navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='img/viacores.png') }}" alt="Logo ViaCores">
+                ViaCores
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.role == 'admin' %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('all_sku_transactions') }}"><i class="bi bi-file-earmark-text me-2"></i>Relatório de Transações</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('import_planilha') }}"><i class="bi bi-upload me-2"></i>Importar Planilha</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('download_pdf') }}"><i class="bi bi-file-earmark-pdf me-2"></i>Baixar Estoque em PDF</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#updateStockModal"><i class="bi bi-arrow-repeat me-2"></i>Atualizar Estoque</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('change_password') }}"><i class="bi bi-key me-2"></i>Alterar Senha</a>
+                            </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Sair</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('login') }}"><i class="bi bi-box-arrow-in-right me-2"></i>Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
+                {% if current_user.is_authenticated %}
+                    <div class="metrics">
+                        <div class="metric">
+                            <i class="bi bi-boxes"></i>
+                            Total Itens: <span>{{ total_items }}</span>
+                        </div>
+                        <div class="metric">
+                            <i class="bi bi-person"></i>
+                            {{ current_user.username }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="erp-tab-content">
+            <h1><i class="bi bi-boxes me-2"></i>Gestão de Estoque</h1>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="alert alert-info" role="alert">
+                        {% for category, message in messages %}
+                            <p>{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <ul class="nav nav-tabs" id="erpTabs" role="tablist">
+                {% if current_user.role == 'admin' %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="scanner-tab" data-bs-toggle="tab" data-bs-target="#scanner" type="button" role="tab" aria-controls="scanner" aria-selected="true">Scanner</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin" type="button" role="tab" aria-controls="admin" aria-selected="false">Admin</button>
+                    </li>
+                {% endif %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if current_user.role != 'admin' %}active{% endif %}" id="search-tab" data-bs-toggle="tab" data-bs-target="#search" type="button" role="tab" aria-controls="search" aria-selected="{% if current_user.role != 'admin' %}true{% else %}false{% endif %}">Consulta</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="erpTabContent">
+                {% if current_user.role == 'admin' %}
+                    <div class="tab-pane fade show active" id="scanner" role="tabpanel" aria-labelledby="scanner-tab">
+                        <div class="scanner-section">
+                            <h2 class="icon-label"><i class="bi bi-upc-scan"></i>Controle por Scanner</h2>
+                            <div class="mb-3">
+                                <label for="scannerInput" class="form-label icon-label"><i class="bi bi-upc-scan"></i>Escaneie o Código</label>
+                                <input type="text" class="form-control" id="scannerInput" placeholder="Escaneie o código de barras ou digite SKUs separados por vírgula" autocomplete="off">
+                            </div>
+                            <div class="d-flex gap-2 mb-3">
+                                <button id="scannerAddBtn" class="btn btn-add"><i class="bi bi-plus-lg"></i> Adicionar</button>
+                                <button id="scannerRemoveBtn" class="btn btn-remove"><i class="bi bi-dash-lg"></i> Remover</button>
+                                <button id="scannerPrintBtn" class="btn btn-print"><i class="bi bi-printer"></i> Gerar Etiquetas</button>
+                            </div>
+                            <div id="scannerAddFields" class="scanner-fields">
+                                <div class="mb-3">
+                                    <label for="scannerQuantityAdd" class="form-label icon-label"><i class="bi bi-123"></i>Quantidade</label>
+                                    <input type="number" class="form-control" id="scannerQuantityAdd" min="1" value="1">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="scannerCaixa" class="form-label icon-label"><i class="bi bi-box"></i>Caixa</label>
+                                    <select class="form-select" id="scannerCaixa">
+                                        <option value="">N/A</option>
+                                        {% for num in range(1, 31) %}
+                                            <option value="{{ num }}">{{ num }}</option>
+                                        {% endfor %}
+                                        <option value="F/C">F/C - Fora da Caixa</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="scannerRemoveFields" class="scanner-fields">
+                                <div class="mb-3">
+                                    <label for="scannerQuantityRemove" class="form-label icon-label"><i class="bi bi-123"></i>Quantidade a Remover</label>
+                                    <input type="number" class="form-control" id="scannerQuantityRemove" min="1" value="1">
+                                </div>
+                                <button id="confirmRemoveBtn" class="btn btn-confirm-remove"><i class="bi bi-check-lg"></i> Confirmar Remoção</button>
+                            </div>
+                            <div id="scannerPrintFields" class="scanner-fields">
+                                <div class="mb-3">
+                                    <label for="scannerQuantityPrint" class="form-label icon-label"><i class="bi bi-123"></i>Quantidade de Etiquetas</label>
+                                    <input type="number" class="form-control" id="scannerQuantityPrint" min="1" value="1">
+                                </div>
+                            </div>
+                            <div id="notificationsContainer"></div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="admin" role="tabpanel" aria-labelledby="admin-tab">
+                        <h2 class="icon-label"><i class="bi bi-person-gear"></i>Administração</h2>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+
+                            
+    <div class="erp-tab-content">
+        <h3 class="icon-label"><i class="bi bi-list-ul"></i>Operações em Massa</h3>
+        <form id="bulkForm" method="POST" action="{{ url_for('bulk_add_remove') }}">
+            <div class="mb-3">
+                <label for="bulk_items" class="form-label icon-label"><i class="bi bi-file-earmark-text"></i>SKUs</label>
+                <textarea class="form-control" id="bulk_items" name="bulk_items" rows="5" placeholder="Exemplo:
+PVFZ021,5,F/C
+PCRV029,3,1
+PC12345,2,N/A" required></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label icon-label"><i class="bi bi-tags"></i>Classificação</label><br>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="classificacao" value="Estoque" id="chkEstoque">
+                    <label class="form-check-label" for="chkEstoque">Estoque</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="classificacao" value="Cancelado" id="chkCancelado">
+                    <label class="form-check-label" for="chkCancelado">Cancelado</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="classificacao" value="Devolucao" id="chkDevolucao">
+                    <label class="form-check-label" for="chkDevolucao">Devolução</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="classificacao" value="Vendas" id="chkVendas">
+                    <label class="form-check-label" for="chkVendas">Vendas</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="classificacao" value="Outros" id="chkOutros">
+                    <label class="form-check-label" for="chkOutros">Outros</label>
+                </div>
+            </div>
+
+            <div class="mb-3" id="outrosObservacaoDiv" style="display: none;">
+                <label for="outrosObservacao" class="form-label icon-label"><i class="bi bi-chat-left-dots"></i>Observação</label>
+                <textarea class="form-control" name="outros_observacao" id="outrosObservacao" rows="2" placeholder="Descreva o motivo..."></textarea>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" name="bulk_add" class="btn btn-add"><i class="bi bi-plus-lg"></i> Adicionar</button>
+                <button type="submit" name="bulk_remove" class="btn btn-remove"><i class="bi bi-dash-lg"></i> Remover</button>
+            </div>
+        </form>
+    </div>
+</div>
+                        </div>
+                        <div id="skusWithoutCaixaAlert" class="mb-3"></div>
+                    </div>
+                    </div>
+<!--OCULTO-->
+                                <div hidden class="erp-tab-content"> 
+                                    <form id="addRemoveForm">
+                                        <div class="mb">
+                                            <label for="barcode" class="form-label icon-label"><i class="bi bi-upc-scan"></i>SKU</label>
+                                            <input type="text" class="form-control" id="barcode" name="barcode" placeholder="Código" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="quantity" class="form-label icon-label"><i class="bi bi-123"></i>Qtde</label>
+                                            <input type="number" class="form-control" id="quantity" name="quantity" placeholder="Quantidade" min="1" value="1" required>
+                                        </div>
+                                        <div class="mb">
+                                            <label for="caixa" class="form-label icon-label"><i class="bi bi-box"></i>Caixa</label>
+                                            <select class="form-select" id="caixa" name="caixa">
+                                                <option value="">N/A</option>
+                                                {% for num in range(1, 31) %}
+                                                    <option value="{{ num }}">{{ num }}</option>
+                                                {% endfor %}
+                                                <option value="F/C">F/C - Fora da Caixa</option>
+                                            </select>
+                                        </div>
+                                        
+                                            <button type="button" id="addItemBtn" class="btn btn-add"><i class="bi bi-plus-lg"></i> Adicionar</button>
+                                            <button type="button" id="removeItemBtn" class="btn btn-remove"><i class="bi bi-dash-lg"></i> Remover</button>
+                                    
+                                    </form>
+                                    <div id="addRemoveNotifications"></div>
+                                </div>
+                            
+                            
+                {% endif %}
+                <div class="tab-pane fade {% if current_user.role != 'admin' %}show active{% endif %}" id="search" role="tabpanel" aria-labelledby="search-tab">
+                    <h2 class="icon-label"><i class="bi bi-search"></i>Consulta de Estoque</h2>
+                    <form id="searchForm">
+                        <div class="mb-3">
+                            <label for="sku" class="form-label icon-label"><i class="bi bi-upc-scan"></i>SKU ou Prefixo</label>
+                            <input type="text" class="form-control" id="sku" name="sku" placeholder="Digite SKUs separados por vírgula (ex.: PVSE001,FFDA212,PCRV092) ou prefixo (ex.: PVSE)">
+                        </div>
+                        <button type="submit" class="btn btn-custom"><i class="bi bi-search"></i> Consultar</button>
+                    </form>
+                    <div id="results" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+
+        {% if current_user.role == 'admin' %}
+            <div class="modal fade" id="updateStockModal" tabindex="-1" aria-labelledby="updateStockModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="updateStockModalLabel">Atualização do Estoque</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Selecione os prefixos de SKU para excluir do estoque:</p>
+                            <form id="updateStockForm">
+                                <div class="row">
+                                    {% for prefix in ['PV', 'PC', 'PH', 'FF', 'FH', 'RV', 'PR', 'CL', 'KD', 'KC', 'VC'] %}
+                                        <div class="col-6 mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="prefixes" value="{{ prefix }}" id="prefix_{{ prefix }}">
+                                                <label class="form-check-label" for="prefix_{{ prefix }}">{{ prefix }}</label>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="mb-3 mt-3">
+                                    <label for="updatePassword" class="form-label">Digite a senha de administrador:</label>
+                                    <input type="password" class="form-control" id="updatePassword" required>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" id="confirmUpdateStock" class="btn btn-warning">Confirmar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        {% endif %}
+
+        <div class="modal fade" id="imageDisplayModal" tabindex="-1" aria-labelledby="imageDisplayModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="imageDisplayModalLabel">Imagem do SKU</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img id="modalImage" src="" alt="Imagem do SKU" class="modal-full-image" style="display: none;">
+                        <div id="modalImagePlaceholder" class="image-placeholder" style="width: 100%; height: 400px; line-height: 400px; font-size: 1rem;">Imagem não disponível</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+        <footer class="text-center mt-4 text-muted">
+            ViaCores ERP - Versão 5.8 | Desenvolvido por ViaCores
+        </footer>
+        
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    const userRole = '{{ current_user.role }}';
+    let selectedAction = null;
+
+    const scannerAddBtn = document.getElementById('scannerAddBtn');
+    const scannerRemoveBtn = document.getElementById('scannerRemoveBtn');
+    const scannerPrintBtn = document.getElementById('scannerPrintBtn');
+    const scannerAddFields = document.getElementById('scannerAddFields');
+    const scannerRemoveFields = document.getElementById('scannerRemoveFields');
+    const scannerPrintFields = document.getElementById('scannerPrintFields');
+    const scannerInput = document.getElementById('scannerInput');
+    const scannerQuantityAdd = document.getElementById('scannerQuantityAdd');
+    const scannerQuantityRemove = document.getElementById('scannerQuantityRemove');
+    const scannerQuantityPrint = document.getElementById('scannerQuantityPrint');
+    const scannerCaixa = document.getElementById('scannerCaixa');
+    const confirmRemoveBtn = document.getElementById('confirmRemoveBtn');
+    const notificationsContainer = document.getElementById('notificationsContainer');
+    const addRemoveForm = document.getElementById('addRemoveForm');
+    const addItemBtn = document.getElementById('addItemBtn');
+    const removeItemBtn = document.getElementById('removeItemBtn');
+    const addRemoveNotifications = document.getElementById('addRemoveNotifications');
+
+    function showNotification(text, type, container) {
+        console.log(`[Client] Notificação: ${text} (${type})`);
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            ${text}
+            <span class="close-btn">×</span>
+        `;
+        container.appendChild(notification);
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 5000);
+        notification.querySelector('.close-btn').addEventListener('click', () => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        });
+    }
+
+    function resetScannerFields() {
+        console.log('[Client] Resetando campos do scanner');
+        scannerInput.value = '';
+        scannerQuantityAdd.value = '1';
+        scannerQuantityRemove.value = '1';
+        scannerQuantityPrint.value = '1';
+        scannerCaixa.value = '';
+        scannerInput.focus();
+    }
+
+    function setScannerMode(mode) {
+        console.log('[Client] Definindo modo do scanner:', mode);
+        scannerAddBtn.classList.remove('selected');
+        scannerRemoveBtn.classList.remove('selected');
+        scannerPrintBtn.classList.remove('selected');
+        scannerAddFields.classList.remove('active');
+        scannerRemoveFields.classList.remove('active');
+        scannerPrintFields.classList.remove('active');
+
+        if (mode) {
+            selectedAction = mode;
+            if (mode === 'add') {
+                scannerAddBtn.classList.add('selected');
+                scannerAddFields.classList.add('active');
+                showNotification('Modo de adição ativado. Escaneie o código para adicionar.', 'info', notificationsContainer);
+            } else if (mode === 'remove') {
+                scannerRemoveBtn.classList.add('selected');
+                scannerRemoveFields.classList.add('active');
+                showNotification('Modo de remoção ativado. Escaneie o código e confirme.', 'info', notificationsContainer);
+            } else if (mode === 'print') {
+                scannerPrintBtn.classList.add('selected');
+                scannerPrintFields.classList.add('active');
+                showNotification('Modo de impressão de etiquetas ativado. Insira os SKUs e quantidade.', 'info', notificationsContainer);
+            }
+            resetScannerFields();
+        } else {
+            selectedAction = null;
+            showNotification('Nenhum modo selecionado.', 'info', notificationsContainer);
+            resetScannerFields();
+        }
+    }
+
+    scannerAddBtn.addEventListener('click', function() {
+        console.log('[Client] Botão Adicionar clicado');
+        if (selectedAction === 'add') {
+            setScannerMode(null);
+        } else {
+            setScannerMode('add');
+        }
+    });
+
+    scannerRemoveBtn.addEventListener('click', function() {
+        console.log('[Client] Botão Remover clicado');
+        if (selectedAction === 'remove') {
+            setScannerMode(null);
+        } else {
+            setScannerMode('remove');
+        }
+    });
+
+    scannerPrintBtn.addEventListener('click', function() {
+        console.log('[Client] Botão Gerar Etiquetas clicado');
+        if (selectedAction === 'print') {
+            setScannerMode(null);
+        } else {
+            setScannerMode('print');
+        }
+    });
+
+    function processAdd() {
+        const sku = scannerInput.value.trim().toUpperCase();
+        const quantity = parseInt(scannerQuantityAdd.value);
+        const caixa = scannerCaixa.value.trim();
+        console.log('[Client] Iniciando adição:', { sku, quantity, caixa });
+
+        if (!sku) {
+            showNotification('Por favor, escaneie ou digite um SKU.', 'error', notificationsContainer);
+            scannerInput.focus();
+            return;
+        }
+        if (!quantity || quantity <= 0) {
+            showNotification('Por favor, insira uma quantidade válida.', 'error', notificationsContainer);
+            scannerQuantityAdd.focus();
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('barcode', sku);
+        formData.append('quantity', quantity);
+        formData.append('caixa', caixa);
+        formData.append('add', 'add');
+
+        fetch('/add_remove_item', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('[Client] Resposta do servidor (adição):', data);
+            if (data.success) {
+                let message = data.message || `Item ${sku} adicionado com sucesso!`;
+                showNotification(message, 'success', notificationsContainer);
+                resetScannerFields();
+                fetchSkusWithoutCaixa();
+            } else {
+                showNotification(data.error || 'Erro ao adicionar item.', 'error', notificationsContainer);
+                scannerInput.focus();
+            }
+        })
+        .catch(error => {
+            console.error('[Client] Erro ao adicionar:', error);
+            showNotification('Erro ao processar a solicitação.', 'error', notificationsContainer);
+            scannerInput.focus();
+        });
+    }
+
+    function processRemove() {
+        const sku = scannerInput.value.trim().toUpperCase();
+        const quantity = parseInt(scannerQuantityRemove.value);
+        console.log('[Client] Iniciando remoção:', { sku, quantity });
+
+        if (!sku) {
+            showNotification('Por favor, escaneie ou digite um SKU.', 'error', notificationsContainer);
+            scannerInput.focus();
+            return;
+        }
+        if (!quantity || quantity <= 0) {
+            showNotification('Por favor, insira uma quantidade válida.', 'error', notificationsContainer);
+            scannerQuantityRemove.focus();
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('barcode', sku);
+        formData.append('quantity', quantity);
+        formData.append('remove', 'remove');
+
+        fetch('/add_remove_item', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('[Client] Resposta do servidor (remoção):', data);
+            if (data.success) {
+                showNotification(data.message || `Item ${sku} removido com sucesso!`, 'success', notificationsContainer);
+                resetScannerFields();
+                fetchSkusWithoutCaixa();
+            } else {
+                showNotification(data.error || 'Erro ao remover item.', 'error', notificationsContainer);
+                scannerInput.focus();
+            }
+        })
+        .catch(error => {
+            console.error('[Client] Erro ao remover:', error);
+            showNotification('Erro ao processar a solicitação.', 'error', notificationsContainer);
+            scannerInput.focus();
+        });
+    }
+
+    function processPrint() {
+        const skusInput = scannerInput.value.trim().toUpperCase();
+        const skus = skusInput.split(',').map(sku => sku.trim()).filter(sku => sku);
+        const quantity = parseInt(scannerQuantityPrint.value);
+        console.log('[Client] Iniciando impressão de etiquetas:', { skus, quantity });
+
+        if (!skus.length) {
+            showNotification('Por favor, insira pelo menos um SKU.', 'error', notificationsContainer);
+            scannerInput.focus();
+            return;
+        }
+        if (!quantity || quantity <= 0) {
+            showNotification('Por favor, insira uma quantidade válida.', 'error', notificationsContainer);
+            scannerQuantityPrint.focus();
+            return;
+        }
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/print_barcode';
+
+        skus.forEach(sku => {
+            const skuInput = document.createElement('input');
+            skuInput.type = 'hidden';
+            skuInput.name = 'sku[]';
+            skuInput.value = sku;
+            form.appendChild(skuInput);
+        });
+
+        const quantityInput = document.createElement('input');
+        quantityInput.type = 'hidden';
+        quantityInput.name = 'quantity';
+        quantityInput.value = quantity;
+        form.appendChild(quantityInput);
+
+        document.body.appendChild(form);
+        form.submit();
+        fetchSkusWithoutCaixa();
+    }
+
+    scannerInput.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter' && scannerInput.value.trim() && selectedAction) {
+            event.preventDefault();
+            console.log('[Client] Enter pressionado em scannerInput, Ação:', selectedAction);
+
+            if (selectedAction === 'add') {
+                processAdd();
+            } else if (selectedAction === 'remove') {
+                processRemove();
+            } else if (selectedAction === 'print') {
+                processPrint();
+            } else {
+                showNotification('Nenhuma ação selecionada.', 'error', notificationsContainer);
+            }
+        }
+    });
+
+    scannerQuantityAdd.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter' && selectedAction === 'add') {
+            event.preventDefault();
+            console.log('[Client] Enter pressionado em scannerQuantityAdd');
+            processAdd();
+        }
+    });
+
+    scannerQuantityRemove.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter' && selectedAction === 'remove') {
+            event.preventDefault();
+            console.log('[Client] Enter pressionado em scannerQuantityRemove');
+            processRemove();
+        }
+    });
+
+    scannerQuantityPrint.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter' && selectedAction === 'print') {
+            event.preventDefault();
+            console.log('[Client] Enter pressionado em scannerQuantityPrint');
+            processPrint();
+        }
+    });
+
+    confirmRemoveBtn.addEventListener('click', function() {
+        if (selectedAction === 'remove') {
+            console.log('[Client] Botão Confirmar Remoção clicado');
+            processRemove();
+        }
+    });
+
+    addItemBtn.addEventListener('click', function(event) {
+        event.preventDefault();
+        const sku = document.getElementById('barcode').value.trim().toUpperCase();
+        const quantity = parseInt(document.getElementById('quantity').value);
+        const caixa = document.getElementById('caixa').value.trim();
+        console.log('[Client] Iniciando adição (formulário):', { sku, quantity, caixa });
+
+        if (!sku) {
+            showNotification('Por favor, insira um SKU.', 'error', addRemoveNotifications);
+            document.getElementById('barcode').focus();
+            return;
+        }
+        if (!quantity || quantity <= 0) {
+            showNotification('Por favor, insira uma quantidade válida.', 'error', addRemoveNotifications);
+            document.getElementById('quantity').focus();
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('barcode', sku);
+        formData.append('quantity', quantity);
+        formData.append('caixa', caixa);
+        formData.append('add', 'add');
+
+        fetch('/add_remove_item', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('[Client] Resposta do servidor (adição formulário):', data);
+            if (data.success) {
+                let message = data.message || `Item ${sku} adicionado com sucesso!`;
+                showNotification(message, 'success', addRemoveNotifications);
+                addRemoveForm.reset();
+                document.getElementById('barcode').focus();
+                fetchSkusWithoutCaixa();
+            } else {
+                showNotification(data.error || 'Erro ao adicionar item.', 'error', addRemoveNotifications);
+                document.getElementById('barcode').focus();
+            }
+        })
+        .catch(error => {
+            console.error('[Client] Erro ao adicionar (formulário):', error);
+            showNotification('Erro ao processar a solicitação.', 'error', addRemoveNotifications);
+            document.getElementById('barcode').focus();
+        });
+    });
+
+    removeItemBtn.addEventListener('click', function(event) {
+        event.preventDefault();
+        const sku = document.getElementById('barcode').value.trim().toUpperCase();
+        const quantity = parseInt(document.getElementById('quantity').value);
+        const caixa = document.getElementById('caixa').value.trim();
+        console.log('[Client] Iniciando remoção (formulário):', { sku, quantity, caixa });
+
+        if (!sku) {
+            showNotification('Por favor, insira um SKU.', 'error', addRemoveNotifications);
+            document.getElementById('barcode').focus();
+            return;
+        }
+        if (!quantity || quantity <= 0) {
+            showNotification('Por favor, insira uma quantidade válida.', 'error', addRemoveNotifications);
+            document.getElementById('quantity').focus();
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('barcode', sku);
+        formData.append('quantity', quantity);
+        formData.append('caixa', caixa);
+        formData.append('remove', 'remove');
+
+        fetch('/add_remove_item', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('[Client] Resposta do servidor (remoção formulário):', data);
+            if (data.success) {
+                showNotification(data.message || `Item ${sku} removido com sucesso!`, 'success', addRemoveNotifications);
+                addRemoveForm.reset();
+                document.getElementById('barcode').focus();
+                fetchSkusWithoutCaixa();
+            } else {
+                showNotification(data.error || 'Erro ao remover item.', 'error', addRemoveNotifications);
+                document.getElementById('barcode').focus();
+            }
+        })
+        .catch(error => {
+            console.error('[Client] Erro ao remover (formulário):', error);
+            showNotification('Erro ao processar a solicitação.', 'error', addRemoveNotifications);
+            document.getElementById('barcode').focus();
+        });
+    });
+
+    document.getElementById('confirmUpdateStock')?.addEventListener('click', function() {
+        const checkboxes = document.querySelectorAll('#updateStockForm input[name="prefixes"]:checked');
+        const prefixes = Array.from(checkboxes).map(cb => cb.value);
+        const password = document.getElementById('updatePassword').value;
+        console.log('[Client] Iniciando atualização de estoque:', { prefixes });
+
+        if (prefixes.length === 0) {
+            showNotification('Por favor, selecione pelo menos um prefixo de SKU.', 'error', notificationsContainer);
+            return;
+        }
+
+        if (!password) {
+            showNotification('Por favor, insira a senha de administrador.', 'error', notificationsContainer);
+            document.getElementById('updatePassword').focus();
+            return;
+        }
+
+        fetch('/update_stock', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ password, prefixes })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('[Client] Resposta do servidor (atualização):', data);
+            if (data.success) {
+                showNotification(data.message, 'success', notificationsContainer);
+                const modal = bootstrap.Modal.getInstance(document.getElementById('updateStockModal'));
+                modal.hide();
+                document.getElementById('updatePassword').value = '';
+                document.querySelectorAll('#updateStockForm input[name="prefixes"]').forEach(cb => cb.checked = false);
+                fetchSkusWithoutCaixa();
+            } else {
+                showNotification(data.message, 'error', notificationsContainer);
+                document.getElementById('updatePassword').focus();
+            }
+        })
+        .catch(error => {
+            console.error('[Client] Erro ao atualizar estoque:', error);
+            showNotification('Erro ao processar a solicitação.', 'error', notificationsContainer);
+        });
+    });
+
+    function fetchSkusWithoutCaixa() {
+        fetch('/get_skus_without_caixa')
+            .then(response => response.json())
+            .then(data => {
+                console.log('[Client] SKUs sem caixa:', data);
+                const alertDiv = document.getElementById('skusWithoutCaixaAlert');
+                if (data.success && data.skus.length > 0) {
+                    alertDiv.innerHTML = `
+                        <a href="/edit_skus_without_caixa" target="_blank" class="alert alert-warning d-block text-center">
+                            ${data.skus.length} SKU${data.skus.length !== 1 ? 's' : ''} sem caixa! Clique para editar.
+                        </a>`;
+                } else {
+                    alertDiv.innerHTML = '';
+                }
+            })
+            .catch(error => {
+                console.error('[Client] Erro ao buscar SKUs sem caixa:', error);
+                document.getElementById('skusWithoutCaixaAlert').innerHTML = '<div class="alert alert-danger">Erro ao carregar SKUs sem caixa.</div>';
+            });
+    }
+
+    function showImageModal(sku) {
+        const modalImage = document.getElementById('modalImage');
+        const modalPlaceholder = document.getElementById('modalImagePlaceholder');
+        modalImage.src = `/get_apr_image/${sku}?t=${new Date().getTime()}`; // Use APR endpoint
+        document.getElementById('imageDisplayModalLabel').textContent = `Imagem do SKU ${sku}`;
+        modalImage.style.display = 'none';
+        modalPlaceholder.style.display = 'flex';
+
+        modalImage.onload = function() {
+            modalImage.style.display = 'block';
+            modalPlaceholder.style.display = 'none';
+            console.log(`[Client] Imagem carregada para SKU=${sku}`);
+        };
+        modalImage.onerror = function() {
+            modalImage.style.display = 'none';
+            modalPlaceholder.style.display = 'flex';
+            console.log(`[Client] Falha ao carregar imagem para SKU=${sku}, exibindo placeholder`);
+        };
+
+        new bootstrap.Modal(document.getElementById('imageDisplayModal')).show();
+    }
+
+    document.getElementById('searchForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const skuInput = document.getElementById('sku');
+        const searchValue = skuInput.value.trim().toUpperCase();
+        const resultsDiv = document.getElementById('results');
+
+        resultsDiv.innerHTML = '<p class="text-muted">Carregando...</p>';
+
+        if (!searchValue) {
+            showNotification('Por favor, insira pelo menos um SKU, prefixo ou tema.', 'error', resultsDiv);
+            resultsDiv.innerHTML = '<p class="text-muted">Por favor, insira pelo menos um SKU, prefixo ou tema.</p>';
+            skuInput.select();
+            return;
+        }
+
+        const skus = searchValue.split(',').map(sku => sku.trim()).filter(sku => sku);
+        if (skus.length === 0) {
+            showNotification('Entrada inválida. Digite SKUs válidos separados por vírgula.', 'error', resultsDiv);
+            resultsDiv.innerHTML = '<p class="text-muted">Entrada inválida. Digite SKUs válidos separados por vírgula.</p>';
+            skuInput.select();
+            return;
+        }
+
+        const isTemaSearch = searchValue.includes(' ') || !searchValue.match(/^[A-Z0-9,-]+$/);
+        const url = isTemaSearch 
+            ? `/buscar_por_tema?tema=${encodeURIComponent(searchValue)}` 
+            : `/search_item?sku=${encodeURIComponent(searchValue)}`;
+
+        console.log(`[Client] Iniciando busca: tipo=${isTemaSearch ? 'tema' : 'sku'}, valor=${searchValue}, url=${url}`);
+
+        fetch(url, {
+            headers: { 'Accept': 'application/json' },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            console.log(`[Client] Status da resposta: ${response.status} ${response.statusText}`);
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(`Erro HTTP: ${response.status} ${response.statusText} - ${text}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('[Client] Resposta da busca:', data);
+            const items = isTemaSearch ? (data.success ? data.items : []) : (data.items || []);
+            let html = '<table class="table table-striped"><thead><tr><th>SKU</th><th>Quantidade</th><th>Caixa</th><th>Imagem</th><th>Ações</th></tr></thead><tbody>';
+            const foundSkus = new Set(items.map(item => item.codigo));
+            const searchedTerms = new Set(skus);
+
+            items.forEach(item => {
+                const sku = item.codigo;
+                const quantity = item.quantidade;
+                const caixa = item.caixa || 'N/A';
+                const reservado = item.reservado;
+                const rowClass = reservado ? 'linha-reservada' : '';
+                const btnClass = reservado ? 'btn-warning' : 'btn-outline-warning';
+                const btnText = reservado ? 'Reservado' : 'Reservar';
+                html += `
+                    <tr class="${rowClass}" data-sku="${sku}" ${reservado ? 'style="background-color: #ffc107;"' : ''}>
+                        <td>${sku}</td>
+                        <td class="quantity-cell" data-quantity="${quantity}">${quantity}</td>
+                        <td class="caixa-cell" data-caixa="${caixa}">${caixa}</td>
+                        <td>
+                            <div class="image-container">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">Carregando...</span>
+                                </div>
+                                <img src="/get_apr_image/${sku}?t=${new Date().getTime()}" class="sku-image" alt="Imagem de ${sku}" style="display: none;">
+                                <div class="image-placeholder" style="display: none;">Sem Imagem</div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-warning lock-btn" title="Editar"><i class="bi bi-lock-fill"></i></button>
+                            {% if current_user.role == 'admin' %}
+                                <a href="{{ url_for('all_sku_transactions', sku=sku) }}" class="btn btn-sm btn-info" title="Relatório do SKU"><i class="bi bi-file-earmark-text"></i></a>
+                                <button class="btn btn-sm btn-secondary btn-image show-image-btn" data-sku="${sku}" title="Mostrar Imagem"><i class="bi bi-image"></i></button>
+                            {% else %}
+                                <button class="btn btn-sm btn-secondary btn-image show-image-btn" data-sku="${sku}" title="Mostrar Imagem"><i class="bi bi-image"></i></button>
+                            {% endif %}
+                            <button class="btn btn-sm ${btnClass} reservar-btn" data-sku="${sku}">
+                                <i class="bi bi-flag-fill"></i> ${btnText}
+                            </button>
+                        </td>
+                    </tr>`;
+                console.log(`[Client] Linha criada para SKU ${sku}: reservado=${reservado}, classList=${rowClass}`);
+            });
+
+            if (!isTemaSearch) {
+                searchedTerms.forEach(term => {
+                    if (!foundSkus.has(term)) {
+                        html += `
+                            <tr data-sku="${term}">
+                                <td>${term}</td>
+                                <td class="text-muted">Não encontrado</td>
+                                <td class="text-muted">-</td>
+                                <td>
+                                    <div class="image-container">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">Carregando...</span>
+                                        </div>
+                                        <img src="/get_apr_image/${term}?t=${new Date().getTime()}" class="sku-image" alt="Imagem de ${term}" style="display: none;">
+                                        <div class="image-placeholder" style="display: none;">Sem Imagem</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if current_user.role == 'admin' %}
+                                        <a href="{{ url_for('all_sku_transactions', sku=term) }}" class="btn btn-sm btn-info" title="Relatório do SKU"><i class="bi bi-file-earmark-text"></i></a>
+                                        <button class="btn btn-sm btn-secondary btn-image show-image-btn" data-sku="${term}" title="Mostrar Imagem"><i class="bi bi-image"></i></button>
+                                    {% else %}
+                                        <button class="btn btn-sm btn-secondary btn-image show-image-btn" data-sku="${term}" title="Mostrar Imagem"><i class="bi bi-image"></i></button>
+                                    {% endif %}
+                                </td>
+                            </tr>`;
+                    }
+                });
+            }
+
+            html += '</tbody></table>';
+            resultsDiv.innerHTML = html;
+
+            if (items.length === 0) {
+                showNotification('Nenhum item encontrado para a pesquisa.', 'error', resultsDiv);
+            } else if (!isTemaSearch && foundSkus.size < searchedTerms.size) {
+                const missingCount = searchedTerms.size - foundSkus.size;
+                showNotification(`${missingCount} SKU${missingCount > 1 ? 's' : ''} não encontrado${missingCount > 1 ? 's' : ''}.`, 'error', resultsDiv);
+            }
+
+            document.querySelectorAll('#results .image-container').forEach(container => {
+                const img = container.querySelector('.sku-image');
+                const placeholder = container.querySelector('.image-placeholder');
+                const spinner = container.querySelector('.spinner-border');
+                const sku = container.closest('tr').dataset.sku;
+
+                img.addEventListener('load', function() {
+                    spinner.style.display = 'none';
+                    this.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    this.classList.add('loaded');
+                    console.log(`[Client] Imagem carregada para SKU ${sku}`);
+                });
+
+                img.addEventListener('error', function() {
+                    spinner.style.display = 'none';
+                    this.style.display = 'none';
+                    placeholder.style.display = 'flex';
+                    console.log(`[Client] Falha ao carregar imagem para SKU ${sku}, exibindo placeholder`);
+                });
+
+                if (img.complete && img.naturalWidth > 0) {
+                    spinner.style.display = 'none';
+                    img.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    img.classList.add('loaded');
+                } else if (img.complete) {
+                    spinner.style.display = 'none';
+                    img.style.display = 'none';
+                    placeholder.style.display = 'flex';
+                }
+
+                [img, placeholder].forEach(element => {
+                    element.addEventListener('click', function() {
+                        console.log(`[Client] Clicado em elemento de imagem para SKU: ${sku}`);
+                        showImageModal(sku);
+                    });
+                });
+            });
+
+            document.querySelectorAll('.show-image-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const sku = this.getAttribute('data-sku');
+                    showImageModal(sku);
+                });
+            });
+
+            if (userRole === 'admin') {
+                document.querySelectorAll('.upload-image-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const sku = this.getAttribute('data-sku');
+                        document.getElementById('uploadSku').value = sku;
+                        document.getElementById('imageUploadModalLabel').textContent = `Importar/Substituir Imagem para ${sku}`;
+                    });
+                });
+            }
+
+            document.querySelectorAll('.lock-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const row = this.closest('tr');
+                    const sku = row.dataset.sku;
+                    const isLocked = this.querySelector('i').classList.contains('bi-lock-fill');
+                    const quantityCell = row.querySelector('.quantity-cell');
+                    const caixaCell = row.querySelector('.caixa-cell');
+
+                    if (isLocked) {
+                        this.innerHTML = '<i class="bi bi-unlock-fill"></i>';
+                        this.title = 'Salvar alterações';
+
+                        const currentQuantity = quantityCell.dataset.quantity;
+                        quantityCell.innerHTML = `<input type="number" class="form-control editable-field" value="${currentQuantity}" min="0">`;
+
+                        const currentCaixa = caixaCell.dataset.caixa;
+                        let caixaOptions = '<option value="">N/A</option>';
+                        for (let i = 1; i <= 30; i++) {
+                            caixaOptions += `<option value="${i}" ${currentCaixa === i.toString() ? 'selected' : ''}>${i}</option>`;
+                        }
+                        caixaOptions += `<option value="F/C" ${currentCaixa === 'F/C' ? 'selected' : ''}>F/C - Fora da Caixa</option>`;
+                        caixaCell.innerHTML = `<select class="form-select editable-field">${caixaOptions}</select>`;
+
+                        const actionsCell = row.querySelector('td:last-child');
+                        const saveBtn = document.createElement('button');
+                        saveBtn.className = 'btn btn-sm btn-success save-btn';
+                        saveBtn.innerHTML = '<i class="bi bi-check-lg"></i> Salvar';
+                        actionsCell.insertBefore(saveBtn, actionsCell.firstChild);
+
+                        saveBtn.addEventListener('click', function() {
+                            const newQuantity = row.querySelector('.quantity-cell input').value;
+                            const newCaixa = row.querySelector('.caixa-cell select').value;
+
+                            if (!newQuantity || parseInt(newQuantity) < 0) {
+                                showNotification('Por favor, insira uma quantidade válida.', 'error', resultsDiv);
+                                return;
+                            }
+
+                            const formData = new FormData();
+                            formData.append('barcode', sku);
+                            formData.append('quantity', newQuantity);
+                            formData.append('caixa', newCaixa);
+
+                            fetch('/edit_item', {
+                                method: 'POST',
+                                body: formData,
+                                headers: {
+                                    'Accept': 'application/json'
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                console.log('[Client] Resposta do servidor (edição):', data);
+                                if (data.success) {
+                                    showNotification(data.message || `Item ${sku} atualizado com sucesso!`, 'success', resultsDiv);
+                                    quantityCell.dataset.quantity = newQuantity;
+                                    quantityCell.innerHTML = newQuantity;
+                                    caixaCell.dataset.caixa = newCaixa || 'N/A';
+                                    caixaCell.innerHTML = newCaixa || 'N/A';
+                                    button.innerHTML = '<i class="bi bi-lock-fill"></i>';
+                                    button.title = 'Editar';
+                                    saveBtn.remove();
+                                    fetchSkusWithoutCaixa();
+                                } else {
+                                    showNotification(data.error || 'Erro ao atualizar item.', 'error', resultsDiv);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('[Client] Erro ao editar:', error);
+                                showNotification('Erro ao processar a solicitação.', 'error', resultsDiv);
+                            });
+                        });
+                    }
+                });
+            });
+
+            skuInput.select();
+        })
+        .catch(error => {
+            console.error('[Client] Erro na busca:', error);
+            showNotification('Erro ao realizar a consulta.', 'error', resultsDiv);
+            resultsDiv.innerHTML = '<p class="text-danger">Erro ao realizar a consulta.</p>';
+            skuInput.select();
+        });
+    });
+
+    document.getElementById('imageUploadForm')?.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+        fetch('{{ url_for("upload_image") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('[Client] Resposta do servidor (upload imagem):', data);
+            if (data.success) {
+                showNotification(data.message || 'Imagem importada/substituída com sucesso!', 'success', document.getElementById('results'));
+                bootstrap.Modal.getInstance(document.getElementById('imageUploadModal')).hide();
+                document.getElementById('imageUploadForm').reset();
+                document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+            } else {
+                showNotification(data.error || 'Erro ao importar/substituir imagem.', 'error', document.getElementById('results'));
+            }
+        })
+        .catch(error => {
+            console.error('[Client] Erro ao importar/substituir imagem:', error);
+            showNotification('Erro ao processar a solicitação.', 'error', document.getElementById('results'));
+        });
+    });
+
+   document.getElementById('bulkForm')?.addEventListener('submit', function(event) {
+    const checkboxes = document.querySelectorAll('input[name="classificacao"]:checked');
+    const outrosCheckbox = document.getElementById('chkOutros');
+    const observacao = document.getElementById('outrosObservacao').value.trim();
+
+    // Bloqueia o envio se nenhuma classificação estiver marcada
+    if (checkboxes.length === 0) {
+        event.preventDefault();
+        showNotification('Selecione pelo menos uma classificação antes de continuar.', 'error', this);
+        return;
+    }
+
+    // Se "Outros" estiver marcado, exige preenchimento da observação
+    if (outrosCheckbox.checked && observacao === '') {
+        event.preventDefault();
+        showNotification('Informe o motivo da classificação "Outros" antes de continuar.', 'error', this);
+        document.getElementById('outrosObservacao').focus();
+    }
+});
+
+
+    window.addEventListener('load', function() {
+        console.log('[Client] Página carregada, focando em scannerInput');
+        scannerInput?.focus();
+        fetchSkusWithoutCaixa();
+    });
+
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.reservar-btn');
+        if (!btn) return;
+
+        const sku = btn.dataset.sku;
+        console.log(`[Client] Tentando reservar/solto SKU: ${sku}`);
+        fetch(`/toggle_reserva/${sku}`, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json' },
+            credentials: 'same-origin'
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log('[Client] Resposta do servidor (reserva):', data);
+            if (data.success) {
+                const isReservado = data.reservado === 1;
+                const row = btn.closest('tr');
+                row.classList.toggle('linha-reservada', isReservado);
+                row.style.backgroundColor = isReservado ? '#ffc107' : '';
+                btn.classList.toggle('btn-outline-warning', !isReservado);
+                btn.classList.toggle('btn-warning', isReservado);
+                btn.innerHTML = `<i class="bi bi-flag-fill"></i> ${isReservado ? 'Reservado' : 'Reservar'}`;
+                showNotification(`Item ${sku} ${isReservado ? 'reservado' : 'solto'} com sucesso!`, 'success', document.getElementById('results'));
+                console.log(`[Client] Linha para SKU ${sku} atualizada: reservado=${isReservado}, classList=${row.className}`);
+            } else {
+                showNotification(`Erro: ${data.error || 'Falha ao alterar reserva.'}`, 'error', document.getElementById('results'));
+            }
+        })
+        .catch(error => {
+            console.error('[Client] Erro ao reservar/solto:', error);
+            showNotification(`Erro ao alterar reserva: ${error.message}`, 'error', document.getElementById('results'));
+        });
+    });
+
+document.addEventListener('DOMContentLoaded', function () {
+    const chkOutros = document.getElementById('chkOutros');
+    const outrosDiv = document.getElementById('outrosObservacaoDiv');
+
+    chkOutros.addEventListener('change', function () {
+        if (chkOutros.checked) {
+            outrosDiv.style.display = 'block';
+        } else {
+            outrosDiv.style.display = 'none';
+        }
+    });
+});
+    
+</script>
+</body>
+</html>
