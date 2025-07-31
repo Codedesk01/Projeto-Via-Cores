@@ -1,0 +1,3365 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Pedidos</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/Logo.png') }}" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(180deg, #f4f7fa 0%, #ebedf0 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding-left: 280px;
+            transition: padding-left 0.3s ease;
+            color: #2d3748;
+        }
+
+        body.sidebar-collapsed {
+            padding-left: 88px;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 280px;
+            background: #fff;
+            border-right: 1px solid #e2e8f0;
+            padding: 32px 20px;
+            transition: width 0.3s ease;
+            z-index: 1000;
+            box-shadow: 4px 0 16px rgba(0, 0, 0, 0.06);
+        }
+
+        .sidebar.collapsed {
+            width: 88px;
+        }
+
+        .sidebar .logo {
+            max-width: 200px;
+            display: block;
+            margin: 0 auto 32px;
+            transition: max-width 0.3s ease;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .sidebar.collapsed .logo {
+            max-width: 60px;
+        }
+
+        .sidebar .nav-title {
+            color: #1a3c87;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 20px 0;
+            text-align: center;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .sidebar.collapsed .nav-title {
+            display: none;
+        }
+
+    
+        .sidebar .nav-link {
+            color: #4a5568;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-radius: 10px;
+            margin: 6px 10px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar .nav-link:hover {
+            background: linear-gradient(90deg, #e0e7ff 0%, #dbeafe 100%);
+            color: #1a3c87;
+            transform: translateX(6px);
+        }
+
+        .sidebar .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: #1a3c87;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .sidebar .nav-link:hover::before {
+            opacity: 1;
+        }
+
+        .sidebar .nav-link i {
+            font-size: 1.35rem;
+            transition: transform 0.25s ease;
+        }
+
+        .sidebar .nav-link:hover i {
+            transform: rotate(10deg) scale(1.2);
+        }
+
+        .sidebar .nav-link span {
+            display: inline-block;
+        }
+
+        .sidebar.collapsed .nav-link span {
+            display: none;
+        }
+
+        .sidebar .toggle-btn {
+            background: none;
+            border: none;
+            color: #4a5568;
+            font-size: 1.75rem;
+            padding: 14px;
+            width: 100%;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .sidebar .toggle-btn:hover {
+            color: #1a3c87;
+            transform: scale(1.1);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 32px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            padding: 1rem;
+        }
+
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #1a202c;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            color: #4a5568;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: #fff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .sku-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .sku-box {
+            flex: 0 0 calc(16.6667% - 1rem);
+            border: 2px solid #007bff;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin: 0.5rem;
+            cursor: pointer;
+            background-color: #fff;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .sku-box:hover {
+            background-color: #e9f0ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+        }
+
+        .sku-box.clicked {
+            background-color: #3498db !important;
+            border: 3px solid #fff !important;
+            color: #fff !important;
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .sku-box.motoboy {
+            background-color: #f4d03f !important;
+            color: #000 !important;
+            border-color: #fff !important;
+            box-shadow: 0 4px 8px rgba(255, 87, 51, 0.2);
+        }
+
+        .sku-box.motoboy.clicked {
+            background-color: #f4d03f !important;
+            border: 3px solid #fff !important;
+            color: #000 !important;
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(204, 0, 0, 0.3);
+        }
+
+        .sku-box.canceled {
+            background-color: #FF0000 !important;
+            color: #fff !important;
+            border-color: #fff !important;
+            box-shadow: 0 4px 8px rgba(255, 0, 0, 0.2);
+        }
+
+        .sku-box.canceled.clicked {
+            background-color: #CC0000 !important;
+            border: 3px solid #fff !important;
+            color: #fff !important;
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(204, 0, 0, 0.3);
+        }
+
+        #checkButton, #checkButtonShopee {
+            position: sticky;
+            bottom: 2rem;
+            right: 2rem;
+            float: right;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            background: linear-gradient(90deg, #28a745, #218838);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.25s ease;
+            display: none;
+            z-index: 100;
+        }
+
+        #checkButton:hover, #checkButtonShopee:hover {
+            background: linear-gradient(90deg, #218838, #1e7e34);
+            transform: translateY(-2px);
+        }
+
+        #checkButton.visible, #checkButtonShopee.visible {
+            display: inline-block;
+        }
+
+        .fixed-total {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 99;
+            text-align: right;
+        }
+
+        #totalSkuCount, #selectedCount, #totalSkuCountShopee, #selectedCountShopee {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        #totalSkuCount span, #selectedCount span, #totalSkuCountShopee span, #selectedCountShopee span {
+            color: #1a3c87;
+        }
+
+        .form-control {
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: border-color 0.2s ease;
+            font-size: 0.95rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        #processButton, #processButtonShopee {
+            background: linear-gradient(90deg, #28a745, #218838);
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        #processButton:hover, #processButtonShopee:hover {
+            background: linear-gradient(90deg, #218838, #1e7e34);
+            transform: translateY(-2px);
+        }
+
+        #processButton:disabled, #processButtonShopee:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+
+        #invalidOrdersList li, #invalidOrdersListShopee li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            background-color: #fef2f2;
+            color: #9b2c2c;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        #invalidOrdersList li.motoboy, #invalidOrdersListShopee li.motoboy {
+            background-color: #ff5733 !important;
+            color: #fff !important;
+            box-shadow: 0 4px 8px rgba(255, 87, 51, 0.2);
+        }
+
+        #invalidOrdersList li:hover, #invalidOrdersListShopee li:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .delete-btn {
+            cursor: pointer;
+            color: #dc3545;
+            font-size: 1.2rem;
+            margin-left: 1rem;
+            transition: color 0.2s ease;
+        }
+
+        .delete-btn:hover {
+            color: #b02a37;
+        }
+
+        #checkedOrdersTable, #checkedOrdersTableShopee {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #fff;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        #checkedOrdersTable th, #checkedOrdersTableShopee th {
+            background: #edf2ff;
+            color: #2d3748;
+            font-weight: 600;
+            padding: 1rem;
+            border: none;
+        }
+
+        #checkedOrdersTable td, #checkedOrdersTableShopee td {
+            padding: 1rem;
+            border: none;
+            border-top: 1px solid #e5e7eb;
+            color: #000000 !important;
+        }
+
+        #checkedOrdersTable tr.motoboy, #checkedOrdersTableShopee tr.motoboy {
+            color: #000000 !important;
+        }
+
+        #checkedOrdersTable tr.canceled td:nth-child(3), #checkedOrdersTableShopee tr.canceled td:nth-child(3) {
+            color: #000000 !important;
+        }
+
+        #checkedOrdersTable tr:nth-child(even), #checkedOrdersTableShopee tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        #checkedOrdersTable tr:hover, #checkedOrdersTableShopee tr:hover {
+            background-color: #e9f0ff;
+        }
+
+        #checkedOrdersTable tr.motoboy:hover, #checkedOrdersTableShopee tr.motoboy:hover {
+            background-color: #e6c02e !important;
+        }
+
+        .total-check {
+            background-color: #edf2ff;
+            font-weight: 600;
+            padding: 0.75rem;
+            border-radius: 0.5rem 0.5rem 0 0;
+            text-align: left;
+            color: #2d3748;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #007bff, #0056b3);
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #0056b3, #004085);
+            transform: translateY(-2px);
+        }
+
+        footer {
+            color: #6b7280;
+            font-size: 0.9rem;
+            padding: 20px 0;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .selected-skus-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        #selectedSkusText, #selectedSkusTextShopee,#selectedSkusTextVC {
+            flex-grow: 1;
+            height: 38px;
+            resize: none;
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            font-size: 0.95rem;
+            color: #2d3748;
+        }
+
+        #copySkusButton, #copySkusButtonShopee {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background: linear-gradient(90deg, #28a745, #218838);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #copySkusButton:hover, #copySkusButtonShopee:hover #copySkusButtonVC:hover {
+            background: linear-gradient(90deg, #218838, #1e7e34);
+            transform: translateY(-2px);
+        }
+
+        .nav-tabs .nav-link {
+            color: #4a5568;
+            font-weight: 500;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: #fff;
+            color: #1a3c87;
+            border-bottom: 3px solid #1a3c87;
+        }
+
+        @media (max-width: 992px) {
+            body {
+                padding-left: 88px;
+            }
+
+            body.sidebar-collapsed {
+                padding-left: 0;
+            }
+
+            .sidebar {
+                width: 88px;
+            }
+
+            .sidebar.expanded {
+                width: 260px;
+            }
+
+            .sidebar .logo {
+                max-width: 60px;
+            }
+
+            .sidebar.expanded .logo {
+                max-width: 180px;
+            }
+
+            .sidebar .nav-title {
+                display: none;
+            }
+
+            .sidebar.expanded .nav-title {
+                display: block;
+            }
+
+            .sidebar .nav-link span {
+                display: none;
+            }
+
+            .sidebar.expanded .nav-link span {
+                display: inline-block;
+            }
+
+            .container {
+                max-width: 95vw;
+                padding: 0 16px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .sku-box {
+                flex: 0 0 calc(25% - 1rem);
+            }
+
+            .fixed-total {
+                right: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+    .sku-box {
+        flex: 0 0 calc(33.333% - 1rem);
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding-left: 0;
+    }
+
+    .sku-box {
+        flex: 0 0 calc(100% - 1rem);
+    }
+}
+
+        @media (max-width: 576px) {
+            .container {
+                margin: 20px auto;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .form-control {
+                font-size: 0.9rem;
+                padding: 0.4rem 0.6rem;
+            }
+
+            #processButton, #processButtonShopee {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+
+            .sku-box {
+                flex: 0 0 calc(50% - 1rem);
+            }
+
+            #checkButton, #checkButtonShopee {
+                padding: 0.75rem 1.5rem;
+                font-size: 1rem;
+            }
+
+            .fixed-total {
+                padding: 0.4rem 0.8rem;
+                margin-right: 0.5rem;
+                top: 1rem;
+            }
+
+            .total-check {
+                font-size: 0.9rem;
+                padding: 0.5rem;
+            }
+
+            .selected-skus-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            #copySkusButton, #copySkusButtonShopee, #copySkusButtonVC{
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        #checkedOrdersTable,
+#checkedOrdersTableShopee {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+#estoqueButton, #estoqueButtonShopee {
+    position: fixed; /* Changed to fixed for top-right positioning */
+    top: 10rem; /* Adjust this value based on the height of the 'Selecionados' section */
+    right: 2rem; /* Position in the top-right corner */
+    padding: 1rem 2rem;
+    border-radius: 0.5rem;
+    background: linear-gradient(90deg, #17a2b8, #138496); /* Different color for Estoque */
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.25s ease;
+    display: none; /* Hidden by default */
+    z-index: 1000; /* High z-index to stay above other content */
+    margin-left: 1rem; /* Space between Check and Estoque buttons */
+}
+
+#estoqueButton:hover, #estoqueButtonShopee:hover {
+    background: linear-gradient(90deg, #138496, #117a8b);
+    transform: translateY(-2px);
+}
+
+#estoqueButton.visible, #estoqueButtonShopee.visible {
+    display: inline-block; /* Show when visible class is added */
+}
+
+/* Optional: Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    #estoqueButton, #estoqueButtonShopee {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+        right: 1rem;
+        top: 3.5rem; /* Adjust for smaller screens */
+    }
+}
+
+
+
+/* Contêiner para os botões Imp, posicionado abaixo do botão Estoque no canto direito */
+.imp-button-container {
+    position: fixed;
+    top: 20rem;
+    right: 2rem;
+    display: none;
+    flex-direction: column;
+    gap: 1rem;
+    z-index: 1000;
+}
+
+.imp-button-container.visible {
+    display: flex;
+}
+
+.btn-info {
+    background-color: #c64e4e;
+    color: white;
+    border: none;
+    border-radius: 0.3rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: center;
+}
+
+.btn-info:hover {
+    background-color: #ff0000;
+    color: #000;
+    transform: translateY(-2px);
+}
+
+.imp-button-container .btn-info.selected {
+    background-color: #1900ff !important;
+    color: white !important;
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+}
+
+@media (max-width: 768px) {
+    .imp-button-container {
+        top: 5.5rem;
+        right: 1rem;
+    }
+}
+
+
+
+
+
+#checkButtonVC {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 1rem;
+    border-radius: 0;
+    background: linear-gradient(90deg, #28a745, #218838);
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.2rem;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.25s ease;
+    display: none;
+    z-index: 100;
+}
+
+#checkButtonVC:hover {
+    background: linear-gradient(90deg, #218838, #1e7e34);
+    transform: translateY(-2px);
+}
+
+#checkButtonVC.visible {
+    display: block;
+}
+
+#estoqueButtonVC {
+ position: fixed; /* Changed to fixed for top-right positioning */
+    top: 10rem; /* Adjust this value based on the height of the 'Selecionados' section */
+    right: 2rem; /* Position in the top-right corner */
+    padding: 1rem 2rem;
+    border-radius: 0.5rem;
+    background: linear-gradient(90deg, #17a2b8, #138496); /* Different color for Estoque */
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.25s ease;
+    display: none; /* Hidden by default */
+    z-index: 1000; /* High z-index to stay above other content */
+    margin-left: 1rem; /* Space between Check and Estoque buttons */
+}
+
+#estoqueButtonVC:hover {
+    background: linear-gradient(90deg, #218838, #1e7e34);
+    transform: translateY(-2px);
+}
+
+#estoqueButtonVC.visible {
+    display: inline-block;
+}
+
+.imp-button-container:has(#imp1ButtonVC) {
+    position: fixed;
+    bottom: calc(100px + 5rem); /* Ajustado para ficar acima do Estoque */
+    right: 2rem;
+    display: none;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 1000;
+}
+
+.imp-button-container:has(#imp1ButtonVC).visible {
+    display: flex;
+}
+
+.imp-button-container .imp-button {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 0.4rem;
+    width: 100px;
+    text-align: center;
+}
+
+
+@media (max-width: 768px) {
+    #checkButtonVC {
+        padding: 0.8rem;
+        font-size: 1rem;
+    }
+    #estoqueButtonVC {
+        bottom: calc(80px + 1.5rem); /* Ajustado para telas menores */
+        right: 1rem;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+    .imp-button-container:has(#imp1ButtonVC) {
+        bottom: calc(80px + 4rem);
+        right: 1rem;
+    }
+    .imp-button-container .imp-button {
+        width: 80px;
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+}
+
+/* Alinhar botões Processar e Prioridade */
+.button-container {
+    display: flex;
+    gap: 10px; /* Espaçamento entre os botões */
+}
+
+/* Estilo para sku-box com prioridade */
+.sku-box.priority {
+    background-color: #ffc107; /* Amarelo */
+    color: #000; /* Texto preto */
+    border: 1px solid #000; /* Borda preta para contraste */
+}
+
+
+
+#cancelButton {
+    position: fixed;
+    top: 40rem; /* Ajuste para ficar abaixo do botão Estoque */
+    right: 2rem;
+    padding: 1rem 2rem;
+    border-radius: 0.5rem;
+    background: linear-gradient(90deg, #dc3545, #c82333); /* Vermelho para indicar cancelamento */
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.25s ease;
+    display: none; /* Escondido por padrão */
+    z-index: 1000;
+    margin-left: 1rem;
+}
+
+#cancelButton:hover {
+    background: linear-gradient(90deg, #c82333, #b91c1c);
+    transform: translateY(-2px);
+}
+
+#cancelButton.visible {
+    display: inline-block; /* Mostra quando visível */
+}
+
+/* Ajustes responsivos */
+@media (max-width: 768px) {
+    #cancelButton {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+        right: 1rem;
+        top: 7rem; /* Ajuste para telas menores */
+    }
+}
+
+
+
+
+
+
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <img src="{{ url_for('static', filename='img/viacores.png') }}" alt="Logo ViaCores" class="logo">
+        <button class="toggle-btn" id="toggleSidebar">
+            <i class="bi bi-list"></i>
+        </button>
+        <div class="nav-title">Gestão de Pedidos</div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('logout') }}" title="Sair">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>Sair</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+<div class="container mt-4">
+    <h1>Gestão de Pedidos</h1>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" id="orderTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab" aria-controls="orders" aria-selected="true">
+                <img src="/static/img/mercado-livre.png" alt="Pedidos Mercado" style="height: 60px;">
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="shopee-tab" data-bs-toggle="tab" data-bs-target="#shopee" type="button" role="tab" aria-controls="shopee" aria-selected="false">
+                <img src="/static/img/shopee.png" alt="Pedidos Shopee" style="height: 60px;">
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="site-tab" data-bs-toggle="tab" data-bs-target="#site" type="button" role="tab" aria-controls="site" aria-selected="false">
+                <img src="/static/img/viacores.png" alt="Pedidos site" style="height: 60px;">
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="orderTabsContent">
+        <!-- Pedidos Mercado Livre -->
+        <div class="tab-pane fade show active" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+            <div class="card">
+                <h2>Processar Pedidos</h2>
+                <form id="processForm" onsubmit="processOrders(event)">
+                    <textarea id="orderText" name="text" rows="6" class="form-control" placeholder="Cole o texto aqui..."></textarea>
+                    <button type="submit" id="processButton" class="btn btn-success mt-2">Processar</button>
+                </form>
+                <p id="errorMessage" class="error-message"></p>
+            </div>
+
+            <div class="card">
+                <h2>Pedidos Processados</h2>
+                <div class="fixed-total">
+                    <p id="totalSkuCount">Total de SKUs: <span>0</span></p>
+                    <p id="selectedCount">Selecionados: <span>0</span></p>
+                </div>
+                <button id="estoqueButton" class="btn btn-success" onclick="checkSelectedOrdersEstoque()">Estoque</button>
+                <div>
+                    {% for section in ['CL', 'FF', 'KD', 'KC', 'PC', 'PR', 'PV', 'PV-ESPECIAL', 'PH', 'TP', 'VC', 'FH', 'RV'] %}
+                    <div class="section">
+                        <h3>{{ section }}</h3>
+                        <div id="{{ section|lower }}-section" class="sku-container">
+                            {% for sku in sections.get(section, []) %}
+                                {% for order in orders if order.sku == sku and not order.checked %}
+                                    <span class="sku-box {{ 'motoboy' if order.status == 'motoboy' }} {{ 'canceled' if order.status == 'cancelado' }}" data-sku="{{ order.sku }}" data-order-id="{{ order.id }}" data-section="{{ section }}">{{ order.sku }}</span>
+                                {% endfor %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button id="checkButton" class="btn btn-success" onclick="checkSelectedOrders()" disabled>Check</button>
+<button id="estoqueButton" class="btn btn-success" onclick="checkSelectedOrdersEstoque()">Estoque</button>
+<div class="imp-button-container">
+    <button id="imp1Button" class="btn btn-info imp-button" onclick="selectImpButton('imp1')">Imp 1</button>
+    <button id="imp2Button" class="btn btn-info imp-button" onclick="selectImpButton('imp2')">Imp 2</button>
+    <button id="imp3Button" class="btn btn-info imp-button" onclick="selectImpButton('imp3')">Imp 3</button>
+    <button id="imp4Button" class="btn btn-info imp-button" onclick="selectImpButton('imp4')">Lona</button>
+</div>
+<button id="cancelButton" class="btn btn-danger" onclick="cancelSelectedOrders()">Cancelado</button>
+<div class="selected-skus-container">
+    <textarea id="selectedSkusText" readonly placeholder="SKUs selecionados aparecerão aqui (ex.: sku,sku,sku)"></textarea>
+    <button id="copySkusButton" onclick="copySelectedSkus()"><i class="bi bi-clipboard"></i> Copiar</button>
+</div>
+            </div>
+
+            <div class="card">
+                <h2>Pedidos Não Processados</h2>
+                <ul id="invalidOrdersList" class="list-unstyled"></ul>
+            </div>
+
+            <div class="card">
+                <h2>Histórico de Pedidos Checkados</h2>
+                <div>
+                    <button class="btn btn-primary mb-3" onclick="toggleCheckedHistory()">Mostrar/Ocultar Histórico</button>
+                    <button class="btn btn-warning mb-3" onclick="resetSelectedChecks()">Resetar Check</button>
+                </div>
+                <div class="total-check" id="totalCheck" style="display:none;">TOTAL CHECK: <span>0</span></div>
+                <table id="checkedOrdersTable" class="table" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>Pedido</th>
+                            <th>SKU</th>
+                            <th>Envio</th>
+                            <th>Produção</th>
+                            <th>Impressora</th>
+                            <th>Data e Hora</th>
+                        </tr>
+                    </thead>
+                    <tbody id="checkedOrdersBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pedidos Shopee -->
+        <div class="tab-pane fade" id="shopee" role="tabpanel" aria-labelledby="shopee-tab">
+            <div class="card">
+                <h2>Processar Pedidos Shopee</h2>
+                <form id="processFormShopee" onsubmit="processOrdersShopee(event)">
+                    <textarea id="shopeeOrderText" name="text" rows="6" class="form-control" placeholder="Cole o texto dos pedidos Shopee aqui..."></textarea>
+                    <button type="submit" id="processButtonShopee" class="btn btn-success mt-2">Processar</button>
+                </form>
+                <p id="errorMessageShopee" class="error-message"></p>
+            </div>
+
+            <div class="card">
+                <h2>Pedidos Shopee Processados</h2>
+                <div class="fixed-total">
+                    <p id="totalSkuCountShopee">Total de SKUs: <span>0</span></p>
+                    <p id="selectedCountShopee">Selecionados: <span>0</span></p>
+                </div>
+                <button id="estoqueButtonShopee" class="btn btn-success" onclick="checkSelectedOrdersEstoqueShopee()">Estoque</button>
+                <div>
+                    {% for section in ['CL', 'FF', 'KD', 'KC', 'PC', 'PR', 'PV', 'PV-ESPECIAL', 'PH', 'TP', 'VC', 'FH', 'RV'] %}
+                    <div class="section">
+                        <h3>{{ section }}</h3>
+                        <div id="{{ section|lower }}-section-shopee" class="sku-container">
+                            {% for sku in sections_shopee.get(section, []) %}
+                                {% for order in orders_shopee if order.sku == sku and not order.checked %}
+                                    <span class="sku-box {{ 'motoboy' if order.status == 'motoboy' }} {{ 'canceled' if order.status == 'cancelado' }}" data-sku="{{ order.display_sku }}" data-order-id="{{ order.id }}" data-section="{{ section }}">{{ order.display_sku }}</span>
+                                {% endfor %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button id="checkButtonShopee" class="btn btn-success" onclick="checkSelectedOrdersShopee()" disabled>Check</button>
+                <button id="estoqueButtonShopee" class="btn btn-success" onclick="checkSelectedOrdersEstoqueShopee()">Estoque</button>
+                
+                <div class="imp-button-container">
+                    <button id="imp1ButtonShopee" class="btn btn-info imp-button" onclick="selectImpButtonShopee('imp1')">Imp 1</button>
+                    <button id="imp2ButtonShopee" class="btn btn-info imp-button" onclick="selectImpButtonShopee('imp2')">Imp 2</button>
+                    <button id="imp3ButtonShopee" class="btn btn-info imp-button" onclick="selectImpButtonShopee('imp3')">Imp 3</button>
+                    <button id="imp4ButtonShopee" class="btn btn-info imp-button" onclick="selectImpButtonShopee('imp4')">Lona</button>
+                </div>
+                <div class="selected-skus-container">
+                    <textarea id="selectedSkusTextShopee" readonly placeholder="SKUs selecionados aparecerão aqui (ex.: sku,sku,sku)"></textarea>
+                    <button id="copySkusButtonShopee" onclick="copySelectedSkusShopee()"><i class="bi bi-clipboard"></i> Copiar</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Pedidos Shopee Não Processados</h2>
+                <ul id="invalidOrdersListShopee" class="list-unstyled"></ul>
+            </div>
+
+            <div class="card">
+                <h2>Histórico de Pedidos Shopee Checkados</h2>
+                <div>
+                    <button class="btn btn-primary mb-3" onclick="toggleCheckedHistoryShopee()">Mostrar/Ocultar Histórico</button>
+                    <button class="btn btn-warning mb-3" onclick="resetSelectedChecksShopee()">Resetar Check</button>
+                </div>
+                <div class="total-check" id="totalCheckShopee" style="display:none;">TOTAL CHECK: <span>0</span></div>
+                <table id="checkedOrdersTableShopee" class="table" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>Pedido</th>
+                            <th>SKU</th>
+                            <th>Envio</th>
+                            <th>Produção</th>
+                            <th>Impressora</th>
+                            <th>Data e Hora</th>
+                        </tr>
+                    </thead>
+                    <tbody id="checkedOrdersBodyShopee"></tbody>
+                </table>
+            </div>
+        </div>
+
+
+
+
+        <!-- Pedidos ViaCores -->
+        <div class="tab-pane fade" id="site" role="tabpanel" aria-labelledby="site-tab">
+            <div class="card">
+                <h2>Processar Pedidos ViaCores</h2>
+                <form id="vcForm" onsubmit="processVCOrders(event)">
+                    <label for="order_id">ID:</label>
+                    <input type="text" id="order_id" name="order_id" class="form-control mb-2" required>
+                    <label for="sku">SKU (separar múltiplos SKUs por vírgula):</label>
+<input type="text" id="sku" name="sku" class="form-control mb-2" placeholder="Ex.: PCRV029,PRFL019">
+                    <label for="loja">Loja:</label>
+<select id="loja" name="loja" class="form-control mb-2" required>
+    <option value="Whatsapp">WhatsApp</option>
+    <option value="Shein">Shein</option>
+    <option value="Site">Site</option>
+    <option value="Magalu">Magalu</option>
+    <!-- Novas opções adicionadas -->
+    <option value="Shopee">Shopee</option>
+    <option value="Mercado Livre">Mercado Livre</option>
+</select>
+
+                  <label for="oxford_painel">Oxford/Malha/Lona/Decor:</label>
+<select id="oxford_painel" name="oxford_painel" class="form-control mb-2" onchange="toggleClienteFieldVC()">
+    <option value="">Nenhum</option>
+    <option value="Oxford">Oxford</option>
+    <option value="Malha">Malha</option>
+    <option value="Lona">Lona</option>
+    <option value="Decor">Decor</option>
+</select>
+
+
+                   <div style="display: none;"><div id="cliente-field" style="display: none;">
+                        
+                        <input type="text" id="cliente" name="cliente" class="form-control mb-2">
+                    </div></div> 
+                    <div class="button-container">
+                        <button type="submit" class="btn btn-primary">Processar</button>
+                        <button type="button" class="btn btn-warning" onclick="processPriorityVCOrders()">Prioridade</button>
+                    </div>
+                </form>
+                <p id="vcErrorMessage" class="error-message"></p>
+            </div>
+
+            <div class="card">
+                <h2>Pedidos ViaCores Processados</h2>
+                <div class="fixed-total">
+                    <p id="vcTotalSkuCount">Total de SKUs: <span>0</span></p>
+                    <p id="vcSelectedCount">Selecionados: <span>0</span></p>
+                </div>
+                <div>
+                    {% for section in ['itens_especiais', 'cl', 'ff', 'kd', 'kc', 'pc', 'pr', 'pv', 'pv-especial', 'ph', 'tp', 'vc', 'fh', 'rv'] %}
+                    <div class="section">
+                        <h3>{{ section | upper }}</h3>
+                        <div id="vc-{{ section }}-section" class="sku-container"></div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button id="checkButtonVC" class="btn btn-success" onclick="checkSelectedOrdersVC()" disabled>Check</button>
+                <button id="estoqueButtonVC" class="btn btn-success" onclick="checkSelectedOrdersEstoqueVC()">Estoque</button>
+                <div class="imp-button-container">
+                    <button id="imp1ButtonVC" class="btn btn-info imp-button" onclick="selectImpButtonVC('imp1')">Imp 1</button>
+                    <button id="imp2ButtonVC" class="btn btn-info imp-button" onclick="selectImpButtonVC('imp2')">Imp 2</button>
+                    <button id="imp3ButtonVC" class="btn btn-info imp-button" onclick="selectImpButtonVC('imp3')">Imp 3</button>
+                    <button id="imp4ButtonVC" class="btn btn-info imp-button" onclick="selectImpButtonVC('imp4')">Lona</button>
+                </div>
+                <div class="selected-skus-container">
+                    <textarea id="selectedSkusTextVC" readonly placeholder="SKUs selecionados aparecerão aqui (ex.: sku,sku,sku)"></textarea>
+                    <button id="copySkusButtonVC" onclick="copySelectedSkusVC()"><i class="bi bi-clipboard"></i> Copiar</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Pedidos ViaCores Não Processados</h2>
+                <ul id="vcInvalidOrdersList" class="list-unstyled"></ul>
+            </div>
+
+            <div class="card">
+                <h2>Histórico de Pedidos ViaCores Checkados</h2>
+                <div>
+                    <button class="btn btn-primary mb-3" onclick="toggleCheckedHistoryVC()">Mostrar/Ocultar Histórico</button>
+                </div>
+                <div class="total-check" id="vcTotalCheck" style="display:none;">TOTAL CHECK: <span>0</span></div>
+                <table id="vcCheckedOrdersTable" class="table" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>Pedido</th>
+                            <th>SKU</th>
+                            <th>Loja</th>
+                            <th>Produção</th>
+                            <th>Impressora</th>
+                            <th>Data e Hora</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vcCheckedOrdersBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        ViaCores ERP - Versão 4.5 | Desenvolvido por ViaCores
+    </footer>
+</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+
+let selectedImp = null;
+let selectedImpShopee = null;
+
+    // Sidebar Toggle
+const sidebar = document.getElementById('sidebar');
+const toggleSidebarBtn = document.getElementById('toggleSidebar');
+toggleSidebarBtn.addEventListener('click', function() {
+    sidebar.classList.toggle('collapsed');
+    document.body.classList.toggle('sidebar-collapsed');
+    if (window.innerWidth <= 992) {
+        sidebar.classList.toggle('expanded');
+    }
+});
+
+window.addEventListener('load', function() {
+    console.log('[DEBUG] Página carregada');
+    if (window.innerWidth <= 992) {
+        sidebar.classList.add('collapsed');
+        document.body.classList.add('sidebar-collapsed');
+    }
+    loadOrders();
+    loadOrdersShopee();
+});
+
+// Pedidos Gerais
+let selectedSkus = [];
+let selectedOrders = new Set();
+const sections = {
+    'CL': 'cl-section',
+    'FF': 'ff-section',
+    'KD': 'kd-section',
+    'KC': 'kc-section',
+    'PC': 'pc-section',
+    'PR': 'pr-section',
+    'PV': 'pv-section',
+    'PV-ESPECIAL': 'pv-especial-section',
+    'PH': 'ph-section',
+    'TP': 'tp-section',
+    'VC': 'vc-section',
+    'FH': 'fh-section',
+    'RV': 'rv-section'
+};
+
+// Pedidos Shopee
+let selectedSkusShopee = [];
+let selectedOrdersShopee = new Set();
+const sectionsShopee = {
+    'CL': 'cl-section-shopee',
+    'FF': 'ff-section-shopee',
+    'KD': 'kd-section-shopee',
+    'KC': 'kc-section-shopee',
+    'PC': 'pc-section-shopee',
+    'PR': 'pr-section-shopee',
+    'PV': 'pv-section-shopee',
+    'PV-ESPECIAL': 'pv-especial-section-shopee',
+    'PH': 'ph-section-shopee',
+    'TP': 'tp-section-shopee',
+    'VC': 'vc-section-shopee',
+    'FH': 'fh-section-shopee',
+    'RV': 'rv-section-shopee'
+};
+
+// Função para determinar a seção do SKU
+function getSectionFromSku(sku, isShopee = false) {
+    if (!sku) {
+        console.warn('[DEBUG] getSectionFromSku: SKU is null or undefined', { isShopee });
+        return 'N/A';
+    }
+    // Remover sufixo -150 para Shopee, se presente
+    let cleanSku = sku;
+    if (isShopee && sku.endsWith('-150')) {
+        cleanSku = sku.replace('-150', '');
+        console.log('[DEBUG] Removido sufixo -150 do SKU:', { original: sku, cleaned: cleanSku });
+    }
+    // SKUs terminados em -100, -999 ou -VF vão para PV-ESPECIAL
+    if (cleanSku.startsWith('PV') && (cleanSku.endsWith('-100') || cleanSku.endsWith('-999') || cleanSku.endsWith('-VF'))) {
+        return 'PV-ESPECIAL';
+    }
+    const prefix = cleanSku.substring(0, 2);
+    return prefix in (isShopee ? sectionsShopee : sections) ? prefix : 'N/A';
+}
+
+
+// Função para cancelar os pedidos selecionados
+async function cancelSelectedOrders() {
+    // Pega todos os itens que foram clicados (selecionados)
+    const selectedBoxes = document.querySelectorAll('.sku-box.clicked');
+
+    if (selectedBoxes.length === 0) {
+        alert('Nenhum pedido selecionado para cancelar.');
+        return;
+    }
+
+    // Extrai os IDs únicos dos pedidos a serem cancelados
+    const orderIds = Array.from(selectedBoxes).map(box => box.getAttribute('data-order-id'));
+
+    // Confirmação do usuário
+    if (!confirm('Tem certeza que deseja cancelar os ' + orderIds.length + ' pedidos selecionados?')) {
+        return;
+    }
+
+    try {
+        // Envia a lista de IDs para o servidor na rota '/cancel_orders'
+        const response = await fetch('/cancel_orders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ order_ids: orderIds })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert('Pedidos cancelados com sucesso!');
+            // Remove os itens cancelados da tela e atualiza as listas
+            selectedBoxes.forEach(box => box.remove());
+            // Recarrega o histórico para mostrar os itens cancelados
+            loadCheckedHistory();
+            // Limpa a seleção atual
+            selectedOrders.clear();
+            selectedSkus = [];
+            updateCheckButton(); // Esconde o botão novamente
+            updateSelectedCount();
+            updateSelectedSkusText();
+        } else {
+            alert('Erro ao cancelar pedidos: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Erro ao cancelar pedidos:', error);
+        alert('Ocorreu um erro na comunicação com o servidor.');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const cancelButton = document.querySelector('#cancel-orders');
+    if (cancelButton) {
+        console.log('[DEBUG] Botão Cancelado encontrado, vinculando evento');
+        cancelButton.addEventListener('click', cancelSelectedOrders);
+    } else {
+        console.error('[DEBUG] Botão Cancelado (#cancel-orders) não encontrado no DOM');
+    }
+});
+
+
+
+function isOrderCanceled(status, notes) {
+    if (status === 'cancelada') return true;
+    if (!notes) return false;
+    const lowerNotes = notes.toLowerCase();
+    return lowerNotes.includes('cancelada') || 
+           lowerNotes.includes('cancelado') || 
+           lowerNotes.includes('não envie') || 
+           lowerNotes.includes('cancele');
+}
+
+function updateCheckButton(isShopee = false) {
+    const checkButton = document.getElementById(isShopee ? 'checkButtonShopee' : 'checkButton');
+    const estoqueButton = document.getElementById(isShopee ? 'estoqueButtonShopee' : 'estoqueButton');
+    const cancelButton = document.getElementById(isShopee ? 'cancelButtonShopee' : 'cancelButton'); 
+    const impButtonContainer = document.querySelector(isShopee ? '.imp-button-container:has(#imp1ButtonShopee)' : '.imp-button-container:has(#imp1Button)');
+    const hasSelectedOrders = (isShopee ? selectedOrdersShopee : selectedOrders).size > 0;
+    const hasSelectedImp = isShopee ? !!selectedImpShopee : !!selectedImp;
+
+    if (!isShopee) {
+        checkButton.classList.toggle('visible', hasSelectedOrders);
+        checkButton.disabled = !(hasSelectedOrders && hasSelectedImp);
+        estoqueButton.classList.toggle('visible', hasSelectedOrders);
+        cancelButton.classList.toggle('visible', hasSelectedOrders); // Controla visibilidade do botão Cancelado
+        if (impButtonContainer) {
+            impButtonContainer.classList.toggle('visible', hasSelectedOrders);
+        }
+    } else {
+        checkButton.classList.toggle('visible', hasSelectedOrders);
+        checkButton.disabled = !(hasSelectedOrders && hasSelectedImp);
+        estoqueButton.classList.toggle('visible', hasSelectedOrders);
+        if (impButtonContainer) {
+            impButtonContainer.classList.toggle('visible', hasSelectedOrders);
+        }
+    }
+}
+
+function updateSelectedCount(isShopee = false) {
+    const countElements = document.querySelectorAll(isShopee ? '#selectedCountShopee span' : '#selectedCount span');
+    countElements.forEach(el => el.textContent = (isShopee ? selectedOrdersShopee : selectedOrders).size);
+}
+
+function updateTotalSkuCount(count, isShopee = false) {
+    const totalCountElement = document.querySelector(isShopee ? '#totalSkuCountShopee span' : '#totalSkuCount span');
+    totalCountElement.textContent = count;
+}
+
+function updateSelectedSkusText(isShopee = false) {
+    const selectedSkusText = document.getElementById(isShopee ? 'selectedSkusTextShopee' : 'selectedSkusText');
+    selectedSkusText.value = (isShopee ? selectedSkusShopee : selectedSkus).join(',');
+}
+
+function copySelectedSkusToClipboard(skuList) {
+    if (!skuList) return;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(skuList)
+            .then(() => console.log('[DEBUG] SKUs copiados para clipboard:', skuList))
+            .catch(err => {
+                console.error('[DEBUG] Falha ao copiar SKUs:', err);
+                alert('Erro ao copiar os SKUs');
+            });
+    } else {
+        try {
+            const textArea = document.createElement('textarea');
+            textArea.value = skuList;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            console.log('[DEBUG] SKUs copiados com fallback:', skuList);
+        } catch (err) {
+            console.error('[DEBUG] Fallback copy failed:', err);
+            alert('Erro ao copiar SKUs para a área de transferência. SKUs: ' + skuList);
+        }
+    }
+}
+
+
+function copySelectedSkus() {
+    const skuList = selectedSkus.join(',');
+    if (!skuList) {
+        alert('Nenhum SKU selecionado para copiar.');
+        return;
+    }
+    copySelectedSkusToClipboard(skuList);
+}
+
+function copySelectedSkusShopee() {
+    const skuList = selectedSkusShopee.join(',');
+    if (!skuList) {
+        alert('Nenhum SKU selecionado para copiar.');
+        return;
+    }
+    copySelectedSkusToClipboard(skuList);
+}
+
+function toggleCheckedHistory() {
+    const table = document.getElementById('checkedOrdersTable');
+    const totalCheck = document.getElementById('totalCheck');
+    table.style.display = table.style.display === 'none' ? 'table' : 'none';
+    totalCheck.style.display = table.style.display === 'none' ? 'none' : 'block';
+    if (table.style.display === 'table') {
+        loadCheckedHistory();
+    }
+}
+
+function toggleCheckedHistoryShopee() {
+    const table = document.getElementById('checkedOrdersTableShopee');
+    const totalCheck = document.getElementById('totalCheckShopee');
+    table.style.display = table.style.display === 'none' ? 'table' : 'none';
+    totalCheck.style.display = table.style.display === 'none' ? 'none' : 'block';
+    if (table.style.display === 'table') {
+        loadCheckedHistoryShopee();
+    }
+}
+
+async function processOrders(event) {
+    event.preventDefault();
+    const textArea = document.getElementById('orderText');
+    const text = textArea.value;
+    try {
+        const response = await fetch('/process', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        console.log('[DEBUG] Process orders response:', data);
+        if (data.success) {
+            alert(data.message);
+            textArea.value = ''; // Clear the textarea after successful processing
+            if (data.corrected_order_ids && data.corrected_order_ids.length > 0) {
+                const invalidList = document.getElementById('invalidOrdersList');
+                console.log('[DEBUG] Corrected Order IDs:', data.corrected_order_ids);
+                console.log('[DEBUG] Invalid Orders List Before Removal:', Array.from(invalidList.children).map(li => li.getAttribute('data-order-id')));
+                Array.from(invalidList.children).forEach(li => {
+                    const orderId = li.getAttribute('data-order-id');
+                    if (data.corrected_order_ids.includes(orderId)) {
+                        li.remove();
+                        console.log('[DEBUG] Removed corrected order from invalid list:', orderId);
+                    }
+                });
+                console.log('[DEBUG] Invalid Orders List After Removal:', Array.from(invalidList.children).map(li => li.getAttribute('data-order-id')));
+            }
+            updateOrderLists(data);
+            loadOrders();
+        } else {
+            document.getElementById('errorMessage').textContent = data.message || 'Erro ao processar pedidos';
+        }
+    } catch (err) {
+        console.error('[DEBUG] Error processing orders:', err);
+        document.getElementById('errorMessage').textContent = 'Erro ao processar pedidos: ' + err.message;
+    }
+}
+
+async function processOrdersShopee(event) {
+    event.preventDefault();
+    const textArea = document.getElementById('shopeeOrderText');
+    let text = textArea.value;
+
+    // Filtrar códigos de rastreamento (ex.: BR257639314413V)
+    const trackingCodeRegex = /[A-Z]{2,5}\d{9,}[A-Z]{2,5}/g;
+    text = text.replace(trackingCodeRegex, '').trim();
+    console.log('[DEBUG] Texto após remover códigos de rastreamento:', text);
+
+    try {
+        const response = await fetch('/process_shopee', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        console.log('[DEBUG] Process Shopee orders response:', data);
+        if (data.success) {
+            alert(data.message);
+            textArea.value = ''; // Clear the textarea after successful processing
+            if (data.corrected_order_ids && data.corrected_order_ids.length > 0) {
+                const invalidList = document.getElementById('invalidOrdersListShopee');
+                console.log('[DEBUG] Corrected Shopee Order IDs:', data.corrected_order_ids);
+                console.log('[DEBUG] Invalid Shopee Orders List Before Removal:', Array.from(invalidList.children).map(li => li.getAttribute('data-order-id')));
+                Array.from(invalidList.children).forEach(li => {
+                    const orderId = li.getAttribute('data-order-id');
+                    if (data.corrected_order_ids.includes(orderId)) {
+                        li.remove();
+                        console.log('[DEBUG] Removed corrected Shopee order from invalid list:', orderId);
+                    }
+                });
+                console.log('[DEBUG] Invalid Shopee Orders List After Removal:', Array.from(invalidList.children).map(li => li.getAttribute('data-order-id')));
+            }
+            updateOrderListsShopee(data);
+            loadOrdersShopee();
+        } else {
+            document.getElementById('errorMessageShopee').textContent = data.message || 'Erro ao processar pedidos Shopee';
+        }
+    } catch (err) {
+        console.error('[DEBUG] Error processing Shopee orders:', err);
+        document.getElementById('errorMessageShopee').textContent = 'Erro ao processar pedidos Shopee: ' + err.message;
+    }
+}
+
+// Função checkSelectedOrders (Mercado Livre)
+async function checkSelectedOrders() {
+     if (selectedOrders.size === 0) {
+        alert('Nenhum SKU selecionado para checkar.');
+        return;
+    }
+    if (!selectedImp) {
+        alert('Selecione uma impressora (Imp 1, Imp 2, Imp 3 ou Imp 4) antes de checkar.');
+        return;
+    }
+
+    const orderIds = Array.from(selectedOrders);
+    const skus = Array.from(document.querySelectorAll('.sku-box.clicked:not([id*="-shopee"])')).map(box => ({
+        sku: box.getAttribute('data-sku'),
+        orderId: box.getAttribute('data-order-id'),
+        section: box.getAttribute('data-section'),
+        isMotoboy: box.classList.contains('motoboy'),
+        isCanceled: box.classList.contains('canceled')
+    }));
+ const skuList = Array.from(document.querySelectorAll('.sku-box.clicked:not([id*="-shopee"])'))
+                        .map(box => box.getAttribute('data-sku'))
+                        .join(',');    console.log('[DEBUG] Checking orders:', { orderIds, skus, skuList, impressora: selectedImp });
+                        const confirmCheck = confirm(`Deseja realmente CHECKAR os pedidos abaixo?\n\nSKUs: ${skuList}\n\nEssa ação não pode ser desfeita.`);
+    if (!confirmCheck) {
+        console.log('[DEBUG] Check cancelado pelo usuário.');
+        return;
+    }
+
+    try {
+        const response = await fetch('/check_orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_ids: orderIds, producao: 'Impressão', impressora: selectedImp })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        console.log('[DEBUG] Check orders response:', data);
+
+        if (data.success) {
+            const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            const tbody = document.getElementById('checkedOrdersBody');
+            skus.forEach(s => {
+                const order = data.checked_skus.find(o => o.id == s.orderId);
+                const row = document.createElement('tr');
+                if (s.isMotoboy) row.classList.add('motoboy');
+                if (s.isCanceled) row.classList.add('canceled');
+                const envio = order.status === 'cancelado' ? 'CANCELADO' : 
+                              order.status === 'motoboy' ? 'Motoboy' : 'Coleta';
+                row.innerHTML = `
+                    <td>${order ? order.order_id : 'N/A'}</td>
+                    <td>${s.sku}</td>
+                    <td>${envio}</td>
+                    <td>Impressão</td>
+                    <td>${selectedImp}</td>
+                    <td>${now}</td>
+                `;
+                tbody.appendChild(row);
+                console.log('[DEBUG] Added to history:', { orderId: s.orderId, sku: s.sku, envio, producao: 'Impressão', impressora: selectedImp, now });
+            });
+            document.querySelectorAll('.sku-box.clicked:not([id*="-shopee"])').forEach(box => {
+                const sku = box.getAttribute('data-sku');
+                const orderId = box.getAttribute('data-order-id');
+                box.remove();
+                const index = selectedSkus.indexOf(sku);
+                if (index !== -1) selectedSkus.splice(index, 1);
+                selectedOrders.delete(orderId);
+            });
+            copySelectedSkusToClipboard(skuList);
+            updateCheckButton();
+            updateSelectedCount();
+            updateSelectedSkusText();
+            document.getElementById('checkedOrdersTable').style.display = 'table';
+            document.getElementById('totalCheck').style.display = 'block';
+            loadCheckedHistory();
+            loadOrders();
+            alert(`Pedidos checkados com sucesso na ${selectedImp}! SKUs: ${skuList}`);
+            // Resetar a seleção da impressora
+            selectedImp = null;
+            document.querySelectorAll('.imp-button:not([id*="-shopee"])').forEach(btn => btn.classList.remove('selected'));
+        } else {
+            document.getElementById('errorMessage').textContent = data.message || 'Erro ao checkar pedidos';
+            console.error('[DEBUG] Check orders failed:', data.message);
+        }
+    } catch (err) {
+        console.error('[DEBUG] Error checking orders:', err);
+        document.getElementById('errorMessage').textContent = 'Erro ao checkar pedidos: ' + err.message;
+    }
+}
+
+async function checkSelectedOrdersEstoque() {
+    if (selectedOrders.size === 0) {
+        alert('Nenhum SKU selecionado para checkar.');
+        return;
+    }
+
+    const orderIds = Array.from(selectedOrders);
+    const skus = Array.from(document.querySelectorAll('.sku-box.clicked:not([id*="-shopee"])')).map(box => ({
+        sku: box.getAttribute('data-sku'),
+        orderId: box.getAttribute('data-order-id'),
+        section: box.getAttribute('data-section'),
+        isMotoboy: box.classList.contains('motoboy'),
+        isCanceled: box.classList.contains('canceled')
+    }));
+    const skuList = skus.map(s => s.sku).join(',');
+    console.log('[DEBUG] Checking orders (Estoque):', { orderIds, skus, skuList });
+
+    try {
+        const response = await fetch('/check_orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_ids: orderIds, producao: 'Estoque' }) // Include producao status
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        console.log('[DEBUG] Check orders (Estoque) response:', data);
+
+        if (data.success) {
+            const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            const tbody = document.getElementById('checkedOrdersBody');
+            skus.forEach(s => {
+                const order = data.checked_skus.find(o => o.id == s.orderId);
+                const row = document.createElement('tr');
+                if (s.isMotoboy) row.classList.add('motoboy');
+                if (s.isCanceled) row.classList.add('canceled');
+                const envio = order.status === 'cancelado' ? 'CANCELADO' : 
+                              order.status === 'motoboy' ? 'Motoboy' : 'Coleta';
+                row.innerHTML = `
+                    <td>${order ? order.order_id : 'N/A'}</td>
+                    <td>${s.sku}</td>
+                    <td>${envio}</td>
+                    <td>Estoque</td> <!-- Set Produção to Estoque -->
+                    <td>${now}</td>
+                `;
+                tbody.appendChild(row);
+                console.log('[DEBUG] Added to history (Estoque):', { orderId: s.orderId, sku: s.sku, envio, producao: 'Estoque', now });
+            });
+            document.querySelectorAll('.sku-box.clicked:not([id*="-shopee"])').forEach(box => {
+                const sku = box.getAttribute('data-sku');
+                const orderId = box.getAttribute('data-order-id');
+                box.remove();
+                const index = selectedSkus.indexOf(sku);
+                if (index !== -1) selectedSkus.splice(index, 1);
+                selectedOrders.delete(orderId);
+            });
+            copySelectedSkusToClipboard(skuList);
+            updateCheckButton();
+            updateSelectedCount();
+            updateSelectedSkusText();
+            document.getElementById('checkedOrdersTable').style.display = 'table';
+            document.getElementById('totalCheck').style.display = 'block';
+            loadCheckedHistory();
+            loadOrders();
+            alert(`Pedidos checkados (Estoque) com sucesso! SKUs: ${skuList}`);
+        } else {
+            document.getElementById('errorMessage').textContent = data.message || 'Erro ao checkar pedidos (Estoque)';
+            console.error('[DEBUG] Check orders (Estoque) failed:', data.message);
+        }
+    } catch (err) {
+        console.error('[DEBUG] Error checking orders (Estoque):', err);
+        document.getElementById('errorMessage').textContent = 'Erro ao checkar pedidos (Estoque): ' + err.message;
+    }
+}
+
+// Ajuste na função checkSelectedOrdersShopee para usar o SKU original
+async function checkSelectedOrdersShopee() {
+    if (selectedOrdersShopee.size === 0) {
+        alert('Nenhum SKU selecionado para checkar.');
+        return;
+    }
+    if (!selectedImpShopee) {
+        alert('Selecione uma impressora (Imp 1, Imp 2, Imp 3 ou Imp 4) antes de checkar.');
+        return;
+    }
+
+    const skuList = Array.from(document.querySelectorAll('.sku-box.clicked[data-section-shopee]'))
+                        .map(box => box.getAttribute('data-sku'))
+                        .join(',');
+
+    const confirmCheck = confirm(`Deseja realmente CHECKAR os pedidos Shopee abaixo?\n\nSKUs: ${skuList}\n\nEssa ação não pode ser desfeita.`);
+    if (!confirmCheck) {
+        console.log('[DEBUG] Check Shopee cancelado pelo usuário.');
+        return;
+    }
+
+    const orderIds = Array.from(selectedOrdersShopee);
+    const skus = Array.from(document.querySelectorAll('.sku-box.clicked[data-section-shopee]')).map(box => ({
+        sku: box.getAttribute('data-original-sku') || box.getAttribute('data-sku'),
+        display_sku: box.getAttribute('data-sku'),
+        order_id: box.getAttribute('data-order-id'),
+        section: box.getAttribute('data-section'),
+        isMotoboy: box.classList.contains('motoboy'),
+        isCanceled: box.classList.contains('canceled')
+    }));
+    const skuListAgain = skus.map(s => s.sku).join(',');
+    console.log('[DEBUG] Checking Shopee orders:', { orderIds, skus, skuListAgain, impressora: selectedImpShopee });
+
+    try {
+        const response = await fetch('/check_orders_shopee', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_ids: orderIds, producao: 'Impressão', impressora: selectedImpShopee })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        console.log('[DEBUG] Check Shopee orders response:', data);
+
+        if (data.success) {
+            const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            const tbody = document.getElementById('checkedOrdersBodyShopee');
+            tbody.innerHTML = ''; // Limpa a tabela para evitar duplicatas
+            skus.forEach(s => {
+                const order = data.checked_skus.find(o => o.id == s.order_id);
+                const row = document.createElement('tr');
+                if (s.isMotoboy) row.classList.add('motoboy');
+                if (s.isCanceled) row.classList.add('canceled');
+                const envio = order.status === 'cancelado' ? 'CANCELADO' : 
+                              order.status === 'motoboy' ? 'Motoboy' : 'Coleta';
+                row.innerHTML = `
+                    <td>${order ? order.order_id : 'N/A'}</td>
+                    <td>${s.display_sku}</td>
+                    <td>${envio}</td>
+                    <td>Impressão</td>
+                    <td>${selectedImpShopee}</td>
+                    <td>${now}</td>
+                `;
+                tbody.appendChild(row);
+                console.log('[DEBUG] Added to Shopee history:', { orderId: s.order_id, sku: s.sku, display_sku: s.display_sku, envio, producao: 'Impressão', impressora: selectedImpShopee, now });
+            });
+            document.querySelectorAll('.sku-box.clicked[data-section-shopee]').forEach(box => {
+                const sku = box.getAttribute('data-original-sku') || box.getAttribute('data-sku');
+                const orderId = box.getAttribute('data-order-id');
+                box.remove();
+                const index = selectedSkusShopee.indexOf(sku);
+                if (index !== -1) selectedSkusShopee.splice(index, 1);
+                selectedOrdersShopee.delete(orderId);
+            });
+            copySelectedSkusToClipboard(skuList);
+            updateCheckButton(true);
+            updateSelectedCount(true);
+            updateSelectedSkusText(true);
+            await loadCheckedHistoryShopee(); // Atualiza o histórico com os dados mais recentes
+            document.getElementById('checkedOrdersTableShopee').style.display = 'table';
+            document.getElementById('totalCheckShopee').style.display = 'block';
+            loadOrdersShopee();
+            alert(`Pedidos Shopee checkados com sucesso na ${selectedImpShopee}! SKUs: ${skuList}`);
+            // Resetar a seleção da impressora
+            selectedImpShopee = null;
+            document.querySelectorAll('.imp-button[id*="-shopee"]').forEach(btn => btn.classList.remove('selected'));
+        } else {
+            document.getElementById('errorMessageShopee').textContent = data.message || 'Erro ao checkar pedidos Shopee';
+            console.error('[DEBUG] Check Shopee orders failed:', data.message);
+        }
+    } catch (err) {
+        console.error('[DEBUG] Error checking Shopee orders:', err);
+        document.getElementById('errorMessageShopee').textContent = 'Erro ao checkar pedidos Shopee: ' + err.message;
+    }
+}
+
+async function checkSelectedOrdersEstoqueShopee() {
+    if (selectedOrdersShopee.size === 0) {
+        alert('Nenhum SKU selecionado para checkar.');
+        return;
+    }
+
+    const orderIds = Array.from(selectedOrdersShopee);
+    const skus = Array.from(document.querySelectorAll('.sku-box.clicked[data-section-shopee]')).map(box => ({
+        sku: box.getAttribute('data-original-sku') || box.getAttribute('data-sku'),
+        display_sku: box.getAttribute('data-sku'),
+        order_id: box.getAttribute('data-order-id'),
+        section: box.getAttribute('data-section'),
+        isMotoboy: box.classList.contains('motoboy'),
+        isCanceled: box.classList.contains('canceled')
+    }));
+    const skuList = skus.map(s => s.sku).join(',');
+    console.log('[DEBUG] Checking Shopee orders (Estoque):', { orderIds, skus, skuList });
+
+    try {
+        const response = await fetch('/check_orders_shopee', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_ids: orderIds, producao: 'Estoque' })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        console.log('[DEBUG] Check Shopee orders (Estoque) response:', data);
+
+        if (data.success) {
+            const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            const tbody = document.getElementById('checkedOrdersBodyShopee');
+            skus.forEach(s => {
+                const order = data.checked_skus.find(o => o.id == s.order_id);
+                const row = document.createElement('tr');
+                if (s.isMotoboy) row.classList.add('motoboy');
+                if (s.isCanceled) row.classList.add('canceled');
+                const envio = order.status === 'cancelado' ? 'CANCELADO' : 
+                              order.status === 'motoboy' ? 'Motoboy' : 'Coleta';
+                row.innerHTML = `
+                    <td>${order ? order.order_id : 'N/A'}</td>
+                    <td>${s.display_sku}</td>
+                    <td>${envio}</td>
+                    <td>Estoque</td>
+                    <td>N/A</td>
+                    <td>${now}</td>
+                `;
+                tbody.appendChild(row);
+                console.log('[DEBUG] Added to Shopee history (Estoque):', { orderId: s.order_id, sku: s.sku, display_sku: s.display_sku, envio, producao: 'Estoque', impressao: 'N/A', now });
+            });
+            document.querySelectorAll('.sku-box.clicked[data-section-shopee]').forEach(box => {
+                const sku = box.getAttribute('data-original-sku') || box.getAttribute('data-sku');
+                const orderId = box.getAttribute('data-order-id');
+                box.remove();
+                const index = selectedSkusShopee.indexOf(sku);
+                if (index !== -1) selectedSkusShopee.splice(index, 1);
+                selectedOrdersShopee.delete(orderId);
+            });
+            copySelectedSkusToClipboard(skuList);
+            updateCheckButton(true);
+            updateSelectedCount(true);
+            updateSelectedSkusText(true);
+            document.getElementById('checkedOrdersTableShopee').style.display = 'table';
+            document.getElementById('totalCheckShopee').style.display = 'block';
+            loadCheckedHistoryShopee();
+            loadOrdersShopee();
+            alert(`Pedidos Shopee checkados (Estoque) com sucesso! SKUs: ${skuList}`);
+        } else {
+            document.getElementById('errorMessageShopee').textContent = data.message || 'Erro ao checkar pedidos Shopee (Estoque)';
+            console.error('[DEBUG] Check Shopee orders (Estoque) failed:', data.message);
+        }
+    } catch (err) {
+        console.error('[DEBUG] Error checking Shopee orders (Estoque):', err);
+        document.getElementById('errorMessageShopee').textContent = 'Erro ao checkar pedidos Shopee (Estoque): ' + err.message;
+    }
+}
+
+
+async function checkSection(section, isShopee = false) {
+    const sectionId = isShopee ? sectionsShopee[section] : sections[section];
+    const clickedBoxes = document.querySelectorAll(`#${sectionId} .sku-box.clicked`);
+    if (clickedBoxes.length === 0) {
+        console.log('[DEBUG] No SKUs selected in section:', section, 'isShopee:', isShopee);
+        alert('Nenhum SKU selecionado para checkar.');
+        return;
+    }
+
+    const orderIds = Array.from(clickedBoxes).map(box => {
+        const id = box.getAttribute('data-order-id');
+        return id ? id.toString() : null;
+    }).filter(id => id !== null);
+    const skus = Array.from(clickedBoxes).map(box => ({
+        sku: box.getAttribute('data-sku'),
+        orderId: box.getAttribute('data-order-id'),
+        isMotoboy: box.classList.contains('motoboy'),
+        isCanceled: box.classList.contains('canceled')
+    }));
+    const skuList = skus.map(s => s.sku).join(',');
+    console.log('[DEBUG] Checking orders:', { section, orderIds, skuList, isShopee });
+
+    if (orderIds.length === 0) {
+        console.error('[DEBUG] No valid order IDs found');
+        document.getElementById(isShopee ? 'errorMessageShopee' : 'errorMessage').textContent = 'Erro: Nenhum ID de pedido válido encontrado.';
+        return;
+    }
+
+    try {
+        const response = await fetch(isShopee ? '/check_orders_shopee' : '/check_orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_ids: orderIds })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        console.log('[DEBUG] Check orders response:', data, 'isShopee:', isShopee);
+
+        if (data.success) {
+            const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            const tbody = document.getElementById(isShopee ? 'checkedOrdersBodyShopee' : 'checkedOrdersBody');
+            clickedBoxes.forEach(box => {
+                const sku = box.getAttribute('data-sku');
+                const orderId = box.getAttribute('data-order-id');
+                const isMotoboy = box.classList.contains('motoboy');
+                const isCanceled = box.classList.contains('canceled');
+                const order = data.checked_skus.find(o => o.id == orderId);
+                const row = document.createElement('tr');
+                if (isMotoboy) row.classList.add('motoboy');
+                if (isCanceled) row.classList.add('canceled');
+                const envio = order.status === 'cancelado' ? 'CANCELADO' : 
+                              order.status === 'motoboy' ? 'Motoboy' : 'Coleta';
+                row.innerHTML = `
+                    <td>${order ? order.order_id : 'N/A'}</td>
+                    <td>${sku}</td>
+                    <td>${envio}</td>
+                    <td>${now}</td>
+                `;
+                tbody.appendChild(row);
+                console.log('[DEBUG] Added to history:', { orderId, sku, envio, now, isShopee });
+                box.remove();
+                if (isShopee) {
+                    const index = selectedSkusShopee.indexOf(sku);
+                    if (index !== -1) selectedSkusShopee.splice(index, 1);
+                    selectedOrdersShopee.delete(orderId);
+                } else {
+                    const index = selectedSkus.indexOf(sku);
+                    if (index !== -1) selectedSkus.splice(index, 1);
+                    selectedOrders.delete(orderId);
+                }
+            });
+            copySelectedSkusToClipboard(skuList);
+            updateCheckButton(isShopee);
+            updateSelectedCount(isShopee);
+            updateSelectedSkusText(isShopee);
+            document.getElementById(isShopee ? 'checkedOrdersTableShopee' : 'checkedOrdersTable').style.display = 'table';
+            document.getElementById(isShopee ? 'totalCheckShopee' : 'totalCheck').style.display = 'block';
+            if (isShopee) {
+                loadCheckedHistoryShopee();
+                loadOrdersShopee();
+            } else {
+                loadCheckedHistory();
+                loadOrders();
+            }
+            alert(`Pedidos ${isShopee ? 'Shopee' : ''} checkados com sucesso! SKUs: ${skuList}`);
+        } else {
+            document.getElementById(isShopee ? 'errorMessageShopee' : 'errorMessage').textContent = data.message || `Erro ao checkar pedidos ${isShopee ? 'Shopee' : ''}`;
+            console.error('[DEBUG] Check orders failed:', data.message, 'isShopee:', isShopee);
+        }
+    } catch (err) {
+        console.error('[DEBUG] Error checking orders:', err, 'isShopee:', isShopee);
+        document.getElementById(isShopee ? 'errorMessageShopee' : 'errorMessage').textContent = `Erro ao checkar pedidos ${isShopee ? 'Shopee' : ''}: ` + err.message;
+    }
+}
+
+function deleteInvalidOrder(orderId, uniqueKey, isShopee = false) {
+    if (orderId === 'N/A') {
+        const li = document.querySelector(`li[data-unique-key="${uniqueKey}"]`);
+        if (li) {
+            li.remove();
+            console.log('[DEBUG] Removed invalid order (N/A) from list:', uniqueKey, 'isShopee:', isShopee);
+        }
+        return;
+    }
+
+    fetch(isShopee ? '/delete_invalid_order_shopee' : '/delete_invalid_order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: orderId })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        console.log('[DEBUG] Delete invalid order response:', data, 'isShopee:', isShopee);
+        if (data.success) {
+            const li = document.querySelector(`li[data-unique-key="${uniqueKey}"]`);
+            if (li) {
+                li.remove();
+                console.log('[DEBUG] Removed invalid order from list:', { orderId, uniqueKey, isShopee });
+            }
+            alert(data.message);
+        } else {
+            document.getElementById(isShopee ? 'errorMessageShopee' : 'errorMessage').textContent = data.message || `Erro ao deletar pedido inválido ${isShopee ? 'Shopee' : ''}`;
+        }
+    })
+    .catch(err => {
+        console.error('[DEBUG] Error deleting invalid order:', err, 'isShopee:', isShopee);
+        document.getElementById(isShopee ? 'errorMessageShopee' : 'errorMessage').textContent = `Erro ao deletar pedido inválido ${isShopee ? 'Shopee' : ''}: ` + err.message;
+    });
+}
+
+async function loadOrders() {
+    try {
+        console.log('[DEBUG] Loading orders...');
+        const response = await fetch('/get_all_orders');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        console.log('[DEBUG] Orders response:', data);
+        if (data.success) {
+            if (Array.isArray(data.orders)) {
+                displaySkus(data.orders, false);
+                updateOrderLists(data);
+            } else {
+                console.error('[DEBUG] data.orders is not an array:', data.orders);
+                document.getElementById('errorMessage').textContent = 'Erro: Dados de pedidos inválidos.';
+            }
+        } else {
+            document.getElementById('errorMessage').textContent = data.message || 'Erro ao carregar pedidos';
+        }
+        loadCheckedHistory();
+    } catch (err) {
+        console.error('[DEBUG] Error loading orders:', err);
+        document.getElementById('errorMessage').textContent = 'Erro ao carregar pedidos: ' + err.message;
+    }
+}
+
+async function loadOrdersShopee() {
+    try {
+        console.log('[DEBUG] Loading Shopee orders...');
+        const response = await fetch('/get_all_orders_shopee');
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+        }
+        const data = await response.json();
+        console.log('[DEBUG] Shopee orders response:', JSON.stringify(data, null, 2));
+        if (data.success) {
+            if (Array.isArray(data.orders)) {
+                console.log('[DEBUG] Shopee orders count:', data.orders.length);
+                data.orders.forEach(order => {
+                    console.log('[DEBUG] Processing Shopee order:', {
+                        id: order.id,
+                        sku: order.sku,
+                        display_sku: order.display_sku,
+                        order_id: order.order_id,
+                        status: order.status,
+                        checked: order.checked
+                    });
+                });
+                displaySkus(data.orders, true);
+                updateOrderListsShopee(data);
+            } else {
+                console.error('[DEBUG] data.orders is not an array for Shopee:', data.orders);
+                document.getElementById('errorMessageShopee').textContent = 'Erro: Dados de pedidos Shopee inválidos.';
+            }
+        } else {
+            console.error('[DEBUG] Failed to load Shopee orders:', data.message);
+            document.getElementById('errorMessageShopee').textContent = data.message || 'Erro ao carregar pedidos Shopee';
+        }
+        loadCheckedHistoryShopee();
+    } catch (err) {
+        console.error('[DEBUG] Error loading Shopee orders:', err);
+        document.getElementById('errorMessageShopee').textContent = 'Erro ao carregar pedidos Shopee: ' + err.message;
+    }
+}
+
+async function loadCheckedHistory() {
+    try {
+        console.log('[DEBUG] Loading checked history...');
+        const response = await fetch('/checked_orders');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        console.log('[DEBUG] Checked orders response:', data);
+        if (data.success) {
+            const tbody = document.getElementById('checkedOrdersBody');
+            const totalCheck = document.getElementById('totalCheck');
+            tbody.innerHTML = '';
+            let totalSkusChecked = 0;
+
+            // Sort orders by checked_date in descending order
+            data.orders.sort((a, b) => {
+                const dateA = a.checked_date ? new Date(a.checked_date.replace(/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})/, '$3-$2-$1 $4:$5')) : new Date(0);
+                const dateB = b.checked_date ? new Date(b.checked_date.replace(/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})/, '$3-$2-$1 $4:$5')) : new Date(0);
+                return dateB - dateA; // Most recent first
+            });
+
+            data.orders.forEach(order => {
+                const isMotoboy = order.status === 'motoboy';
+                const isCanceled = isOrderCanceled(order.status, order.notes);
+                const row = document.createElement('tr');
+                if (isMotoboy) row.classList.add('motoboy');
+                if (isCanceled) row.classList.add('canceled');
+                row.innerHTML = `
+                    <td>${order.order_id || 'N/A'}</td>
+                    <td>${order.sku || 'N/A'}</td>
+                    <td>${isCanceled ? 'CANCELADO' : (isMotoboy ? 'Motoboy' : 'Coleta')}</td>
+                    <td>${order.producao || 'N/A'}</td>
+                    <td>${order.impressora || 'N/A'}</td>
+                    <td>${order.checked_date || 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+                totalSkusChecked++;
+            });
+            totalCheck.querySelector('span').textContent = totalSkusChecked;
+        } else {
+            document.getElementById('errorMessage').textContent = data.message || 'Erro ao carregar histórico';
+        }
+    } catch (err) {
+        console.error('[DEBUG] Error loading checked history:', err);
+        document.getElementById('errorMessage').textContent = 'Erro ao carregar histórico: ' + err.message;
+    }
+}
+
+// Função loadCheckedHistoryShopee (Shopee)
+async function loadCheckedHistoryShopee() {
+    try {
+        console.log('[DEBUG] Loading checked Shopee history...');
+        const response = await fetch('/checked_orders_shopee');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        console.log('[DEBUG] Checked Shopee orders response:', data);
+        if (data.success) {
+            const tbody = document.getElementById('checkedOrdersBodyShopee');
+            const totalCheck = document.getElementById('totalCheckShopee');
+            tbody.innerHTML = '';
+            let totalSkusChecked = 0;
+
+            // Sort orders by checked_date in descending order
+            data.orders.sort((a, b) => {
+                const dateA = a.checked_date ? new Date(a.checked_date.replace(/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})/, '$3-$2-$1 $4:$5')) : new Date(0);
+                const dateB = b.checked_date ? new Date(b.checked_date.replace(/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})/, '$3-$2-$1 $4:$5')) : new Date(0);
+                return dateB - dateA; // Most recent first
+            });
+
+            data.orders.forEach(order => {
+                const isMotoboy = order.status === 'motoboy';
+                const isCanceled = isOrderCanceled(order.status, order.notes);
+                const row = document.createElement('tr');
+                if (isMotoboy) row.classList.add('motoboy');
+                if (isCanceled) row.classList.add('canceled');
+                row.innerHTML = `
+                    <td>${order.order_id || 'N/A'}</td>
+                    <td>${order.display_sku || order.sku || 'N/A'}</td>
+                    <td>${isCanceled ? 'CANCELADO' : (isMotoboy ? 'Motoboy' : 'Coleta')}</td>
+                    <td>${order.producao || 'N/A'}</td>
+                    <td>${order.impressora || 'N/A'}</td>
+                    <td>${order.checked_date || 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+                totalSkusChecked++;
+            });
+            totalCheck.querySelector('span').textContent = totalSkusChecked;
+        } else {
+            document.getElementById('errorMessageShopee').textContent = data.message || 'Erro ao carregar histórico Shopee';
+        }
+    } catch (err) {
+        console.error('[DEBUG] Error loading checked Shopee history:', err);
+        document.getElementById('errorMessageShopee').textContent = 'Erro ao carregar histórico Shopee: ' + err.message;
+    }
+}
+
+// Função para exibir SKUs na interface
+function displaySkus(orders, isShopee = false) {
+    const sectionsData = {
+        'CL': [], 'FF': [], 'KD': [], 'KC': [], 'PC': [], 'PR': [], 'PV': [], 'PV-ESPECIAL': [], 'PH': [], 'TP': [], 'VC': [], 'FH': [], 'RV': []
+    };
+    let totalSkus = 0;
+    orders.forEach(order => {
+        if (order.checked) {
+            console.log('[DEBUG] Skipping checked order:', { id: order.id, sku: order.sku, isShopee });
+            return;
+        }
+        let skuToUse = isShopee ? (order.display_sku || order.sku) : order.sku;
+        let originalSku = skuToUse; // Manter SKU original para referência
+        if (isShopee && skuToUse && skuToUse.endsWith('-150')) {
+            skuToUse = skuToUse.replace('-150', '');
+            console.log('[DEBUG] SKU ajustado para exibição:', { original: originalSku, displayed: skuToUse });
+        }
+        if (skuToUse) {
+            const section = getSectionFromSku(skuToUse, isShopee);
+            if (section !== 'N/A' && section in sectionsData) {
+                sectionsData[section].push({
+                    sku: skuToUse,
+                    original_sku: originalSku, // Armazenar SKU original
+                    order_id: String(order.id),
+                    notes: order.notes || '',
+                    status: order.status
+                });
+                totalSkus++;
+            } else {
+                console.warn('[DEBUG] Invalid section for SKU:', { sku: skuToUse, section, isShopee });
+            }
+        } else {
+            console.warn('[DEBUG] Skipping order with no SKU:', { order, isShopee });
+        }
+    });
+
+    console.log('[DEBUG] Sections data:', JSON.stringify(sectionsData, null, 2), 'isShopee:', isShopee);
+    console.log('[DEBUG] Total SKUs:', totalSkus, 'isShopee:', isShopee);
+    updateTotalSkuCount(totalSkus, isShopee);
+
+    for (const [section, items] of Object.entries(sectionsData)) {
+        const container = document.getElementById(isShopee ? sectionsShopee[section] : sections[section]);
+        if (!container) {
+            console.error('[DEBUG] Container not found for section:', section, 'isShopee:', isShopee);
+            continue;
+        }
+        container.innerHTML = '';
+        if (items.length > 0) {
+            items.sort((a, b) => a.sku.localeCompare(b.sku));
+            items.forEach(item => {
+                const span = document.createElement('span');
+                const isCanceled = isOrderCanceled(item.status, item.notes);
+                span.className = `sku-box ${item.status === 'motoboy' ? 'motoboy' : ''} ${isCanceled ? 'canceled' : ''}`;
+                span.setAttribute('data-sku', item.sku); // SKU exibido (sem -150)
+                span.setAttribute('data-original-sku', item.original_sku); // SKU original
+                span.setAttribute('data-order-id', item.order_id);
+                span.setAttribute('data-section', section);
+                if (isShopee) {
+                    span.setAttribute('data-section-shopee', 'true');
+                }
+                span.textContent = item.sku; // Exibir SKU sem -150
+                container.appendChild(span);
+                console.log('[DEBUG] Added SKU box:', { section, sku: item.sku, original_sku: item.original_sku, order_id: item.order_id, isShopee });
+            });
+        } else {
+            container.textContent = 'Nenhum SKU disponível.';
+        }
+    }
+    addClickHandlers(isShopee);
+}
+
+function addClickHandlers(isShopee = false) {
+    const selector = isShopee ? '[data-section-shopee="true"]' : '.sku-box:not([data-section-shopee])';
+    const skuBoxes = document.querySelectorAll(selector);
+    console.log('[DEBUG] Adding click handlers to', skuBoxes.length, 'SKU boxes', 'isShopee:', isShopee, 'selector:', selector);
+    skuBoxes.forEach(box => {
+        box.removeEventListener('click', isShopee ? handleBoxClickShopee : handleBoxClick);
+        box.addEventListener('click', isShopee ? handleBoxClickShopee : handleBoxClick);
+    });
+}
+
+function handleBoxClick() {
+    const sku = this.getAttribute('data-sku');
+    const orderId = this.getAttribute('data-order-id');
+    this.classList.toggle('clicked');
+    if (this.classList.contains('clicked')) {
+        selectedSkus.push(sku);
+        selectedOrders.add(orderId);
+    } else {
+        const index = selectedSkus.indexOf(sku);
+        if (index !== -1) selectedSkus.splice(index, 1);
+        selectedOrders.delete(orderId);
+    }
+    console.log('[DEBUG] Selected SKUs:', selectedSkus);
+    console.log('[DEBUG] Selected Orders:', Array.from(selectedOrders));
+    updateSelectedCount();
+    updateCheckButton();
+    updateSelectedSkusText();
+    copySelectedSkusToClipboard(selectedSkus.join(','));
+}
+
+// Ajuste na função handleBoxClickShopee para usar o SKU original ao selecionar
+function handleBoxClickShopee() {
+    const sku = this.getAttribute('data-sku');
+    const originalSku = this.getAttribute('data-original-sku');
+    const orderId = this.getAttribute('data-order-id');
+    this.classList.toggle('clicked');
+
+    if (this.classList.contains('clicked')) {
+        selectedSkusShopee.push(originalSku || sku);
+        selectedOrdersShopee.add(orderId);
+    } else {
+        const index = selectedSkusShopee.indexOf(originalSku || sku);
+        if (index !== -1) selectedSkusShopee.splice(index, 1);
+        selectedOrdersShopee.delete(orderId);
+    }
+
+    console.log('[DEBUG] Selected Shopee SKUs:', selectedSkusShopee);
+    console.log('[DEBUG] Selected Shopee Orders:', Array.from(selectedOrdersShopee));
+
+    // ATUALIZAÇÕES PARA A ABA SHOPEE
+    updateSelectedCount(true);
+    updateCheckButton(true); // <-- ESTA É A LINHA CRUCIAL QUE FALTAVA
+    updateSelectedSkusText(true);
+    copySelectedSkusToClipboard(selectedSkusShopee.join(','));
+}
+
+
+function updateOrderLists(data) {
+    const invalidOrdersList = document.getElementById('invalidOrdersList');
+    invalidOrdersList.innerHTML = '';
+    const seenOrderIds = new Set();
+    const correctedOrderIds = new Set(data.corrected_order_ids || []);
+    const validOrderIds = new Set(Array.isArray(data.orders) ? data.orders.filter(o => o.sku).map(o => o.order_id) : []);
+    console.log('[DEBUG] Valid Order IDs:', Array.from(validOrderIds));
+    console.log('[DEBUG] Corrected Order IDs:', Array.from(correctedOrderIds));
+    [...(data.invalid_no_sku_ids || []), ...(data.failed_orders || [])].forEach((order, index) => {
+        const orderId = order.order_id || 'N/A';
+        if (validOrderIds.has(orderId) || correctedOrderIds.has(orderId)) {
+            console.log('[DEBUG] Skipping invalid order with valid/corrected SKU:', orderId);
+            return;
+        }
+        const buyerName = order.buyer_name || 'N/A';
+        const error = order.error ? ` (${order.sku || 'N/A'}: ${order.error})` : '';
+        const uniqueKey = `${orderId}-${index}`;
+        if (!seenOrderIds.has(uniqueKey)) {
+            const li = document.createElement('li');
+            li.setAttribute('data-order-id', orderId);
+            li.setAttribute('data-unique-key', uniqueKey);
+            if (order.status === 'motoboy') {
+                li.classList.add('motoboy');
+            }
+            const textSpan = document.createElement('span');
+            textSpan.textContent = `${orderId} - ${buyerName}${error}`;
+            const deleteBtn = document.createElement('span');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '🗑️';
+            deleteBtn.onclick = () => deleteInvalidOrder(orderId, uniqueKey);
+            li.appendChild(textSpan);
+            li.appendChild(deleteBtn);
+            invalidOrdersList.appendChild(li);
+            seenOrderIds.add(uniqueKey);
+            console.log('[DEBUG] Added invalid order to list:', { orderId, buyerName, error, uniqueKey });
+        }
+    });
+}
+
+function updateOrderListsShopee(data) {
+    const invalidOrdersList = document.getElementById('invalidOrdersListShopee');
+    invalidOrdersList.innerHTML = '';
+    const seenOrderIds = new Set();
+    const correctedOrderIds = new Set(data.corrected_order_ids || []);
+    const validOrderIds = new Set(Array.isArray(data.orders) ? data.orders.filter(o => o.sku).map(o => o.order_id) : []);
+    console.log('[DEBUG] Valid Shopee Order IDs:', Array.from(validOrderIds));
+    console.log('[DEBUG] Corrected Shopee Order IDs:', Array.from(correctedOrderIds));
+    [...(data.invalid_no_sku_ids || []), ...(data.failed_orders || [])].forEach((order, index) => {
+        const orderId = order.order_id || 'N/A';
+        if (validOrderIds.has(orderId) || correctedOrderIds.has(orderId)) {
+            console.log('[DEBUG] Skipping invalid Shopee order with valid/corrected SKU:', orderId);
+            return;
+        }
+        const buyerName = order.buyer_name || 'N/A';
+        const error = order.error ? ` (${order.sku || 'N/A'}: ${order.error})` : '';
+        const uniqueKey = `${orderId}-${index}`;
+        if (!seenOrderIds.has(uniqueKey)) {
+            const li = document.createElement('li');
+            li.setAttribute('data-order-id', orderId);
+            li.setAttribute('data-unique-key', uniqueKey);
+            if (order.status === 'motoboy') {
+                li.classList.add('motoboy');
+            }
+            const textSpan = document.createElement('span');
+            textSpan.textContent = `${orderId} - ${buyerName}${error}`;
+            const deleteBtn = document.createElement('span');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '🗑️';
+            deleteBtn.onclick = () => deleteInvalidOrder(orderId, uniqueKey, true);
+            li.appendChild(textSpan);
+            li.appendChild(deleteBtn);
+            invalidOrdersList.appendChild(li);
+            seenOrderIds.add(uniqueKey);
+            console.log('[DEBUG] Added invalid Shopee order to list:', { orderId, buyerName, error, uniqueKey });
+        }
+    });
+}
+
+// Função para selecionar o botão Imp (Mercado Livre)
+function selectImpButton(imp) {
+    selectedImp = imp;
+    document.querySelectorAll('.imp-button:not([id*="-shopee"])').forEach(btn => {
+        btn.classList.toggle('selected', btn.id === `${imp}Button`);
+    });
+    updateCheckButton();
+}
+function selectImpButtonShopee(imp) {
+    console.log('[DEBUG] selectImpButtonShopee called with imp:', imp);
+    selectedImpShopee = imp;
+    const buttons = document.querySelectorAll('.imp-button-container:has(#imp1ButtonShopee) .imp-button');
+    console.log('[DEBUG] Found Shopee Imp buttons:', buttons.length, Array.from(buttons).map(btn => btn.id));
+    buttons.forEach(btn => {
+        const isSelected = btn.id === `${imp}ButtonShopee`;
+        btn.classList.toggle('selected', isSelected);
+        console.log('[DEBUG] Button', btn.id, 'selected:', isSelected);
+    });
+    updateCheckButton(true);
+}
+
+// 1. Crie esta nova função para o cancelamento na aba Shopee
+async function cancelSelectedOrdersShopee() {
+    // Pega todos os itens selecionados (clicados) na aba da Shopee
+    const selectedBoxes = document.querySelectorAll('.sku-box.clicked[data-section-shopee]');
+
+    if (selectedBoxes.length === 0) {
+        alert('Nenhum pedido da Shopee selecionado para cancelar.');
+        return;
+    }
+
+    // Extrai os IDs únicos dos pedidos a serem cancelados
+    const orderIds = Array.from(selectedBoxes).map(box => box.getAttribute('data-order-id'));
+
+    if (!confirm('Tem certeza que deseja cancelar os ' + orderIds.length + ' pedidos da Shopee selecionados?')) {
+        return;
+    }
+
+    try {
+        // Envia a lista de IDs para a nova rota do servidor: '/cancel_orders_shopee'
+        const response = await fetch('/cancel_orders_shopee', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ order_ids: orderIds })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert('Pedidos da Shopee cancelados com sucesso!');
+            // Remove os itens da tela
+            selectedBoxes.forEach(box => box.remove());
+            // Recarrega o histórico da Shopee para mostrar os itens cancelados
+            loadCheckedHistoryShopee();
+            // Limpa a seleção atual
+            selectedOrdersShopee.clear();
+            selectedSkusShopee = [];
+            updateCheckButton(true); // O 'true' indica que é a aba Shopee
+            updateSelectedCount(true);
+            updateSelectedSkusText(true);
+        } else {
+            alert('Erro ao cancelar pedidos da Shopee: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Erro ao cancelar pedidos da Shopee:', error);
+        alert('Ocorreu um erro na comunicação com o servidor.');
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+//MOTOR VC
+
+
+// Variáveis globais para a aba ViaCores
+let selectedSkusVC = [];
+let selectedOrdersVC = new Set();
+let selectedImpVC = null;
+
+const sectionsVC = {
+    'itens_especiais': 'vc-itens_especiais-section',
+    'cl': 'vc-cl-section',
+    'ff': 'vc-ff-section',
+    'kd': 'vc-kd-section',
+    'kc': 'vc-kc-section',
+    'pc': 'vc-pc-section',
+    'pr': 'vc-pr-section',
+    'pv': 'vc-pv-section',
+    'pv-especial': 'vc-pv-especial-section',
+    'ph': 'vc-ph-section',
+    'tp': 'vc-tp-section',
+    'vc': 'vc-vc-section',
+    'fh': 'vc-fh-section',
+    'rv': 'vc-rv-section'
+};
+
+function getSectionFromSkuVC(sku, itemType) {
+    if (!sku && itemType) {
+        console.log('[DEBUG] Item especial detectado:', itemType);
+        return 'itens_especiais';
+    }
+    if (!sku) {
+        console.warn('[DEBUG] getSectionFromSkuVC: SKU is null or undefined');
+        return 'N/A';
+    }
+
+    const upperSku = sku.toUpperCase();
+    if (upperSku.includes('OXFORD') || upperSku.includes('MALHA') || upperSku.includes('LONA') || upperSku.includes('DECOR')) {
+        return 'itens_especiais';
+    }
+
+    if (sku.startsWith('PV') && (sku.endsWith('-100') || sku.endsWith('-999') || sku.endsWith('-VF'))) {
+        return 'pv-especial';
+    }
+
+    const prefix = sku.substring(0, 2).toLowerCase();
+    return prefix in sectionsVC ? prefix : 'N/A';
+}
+
+function resetVcTab() {
+    selectedSkusVC = [];
+    selectedOrdersVC.clear();
+    selectedImpVC = null;
+    document.querySelectorAll('.sku-box[data-vc="true"]').forEach(box => {
+        box.classList.remove('clicked');
+    });
+    document.querySelectorAll('.imp-button[id*="-vc"]').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    const adjustOptions = document.getElementById('adjustOptionsVC');
+    if (adjustOptions) {
+        adjustOptions.innerHTML = '';
+        adjustOptions.style.display = 'none';
+    }
+    updateSelectedCountVC();
+    updateCheckButtonVC();
+    updateSelectedSkusTextVC();
+    console.log('[DEBUG] Reset VC tab state');
+}
+
+
+function updateCheckButtonVC() {
+       const checkButton = document.getElementById('checkButtonVC');
+    const estoqueButton = document.getElementById('estoqueButtonVC');
+    const impButtonContainer = document.querySelector('.imp-button-container:has(#imp1ButtonVC)');
+    const hasSelectedImp = !!selectedImpVC;
+
+    const selected = document.querySelectorAll('#site .sku-box.clicked');
+    const hasSelectedOrders = selected.length > 0;
+
+    checkButton.classList.toggle('visible', hasSelectedOrders);
+    checkButton.disabled = !(hasSelectedOrders && hasSelectedImp);
+    estoqueButton.classList.toggle('visible', hasSelectedOrders);
+
+    if (impButtonContainer) {
+        impButtonContainer.classList.toggle('visible', hasSelectedOrders);
+    }
+}
+
+function updateSelectedCountVC() {
+    const countElement = document.querySelector('#vcSelectedCount span');
+    countElement.textContent = selectedOrdersVC.size;
+}
+
+function updateTotalSkuCountVC(count) {
+    const totalCountElement = document.querySelector('#vcTotalSkuCount span');
+    totalCountElement.textContent = count;
+}
+
+function updateSelectedSkusTextVC() {
+    const selectedSkusText = document.getElementById('selectedSkusTextVC');
+    if (selectedSkusText) {
+        selectedSkusText.value = selectedSkusVC.join(',');
+        // Copiar automaticamente os SKUs para a área de transferência
+        if (selectedSkusVC.length > 0) {
+            copySelectedSkusVC();
+        }
+    }
+}
+
+function copySelectedSkusVC() {
+    const materiais = ['LONA', 'OXFORD', 'MALHA', 'DECOR', 'PAINEL'];
+
+    const skusOnlyIDs = selectedSkusVC.map(sku => {
+        let clean = sku.trim().toUpperCase();
+
+        // Verifica se começa com material
+        const matchedMaterial = materiais.find(mat => clean.startsWith(mat + ' ') || clean.includes(' ' + mat));
+
+        if (matchedMaterial) {
+            // Remove o material do início, se houver
+            if (clean.startsWith(matchedMaterial + ' ')) {
+                clean = clean.substring(matchedMaterial.length + 1).trim();
+            } else {
+                clean = clean.replace(' ' + matchedMaterial, '').trim();
+            }
+
+            // Copia apenas os 5 primeiros caracteres se for especial
+            return clean.slice(0, 5);
+        }
+
+        return clean; // SKU completo para os não especiais
+    });
+
+    const skuList = skusOnlyIDs.join(',');
+    if (!skuList) {
+        alert('Nenhum SKU selecionado para copiar.');
+        return;
+    }
+
+    console.log('[DEBUG] SKUs originais:', selectedSkusVC);
+    console.log('[DEBUG] SKUs copiados para clipboard:', skuList);
+
+    copySelectedSkusToClipboard(skuList);
+
+    // Atualiza a textarea visível no frontend
+    const selectedSkusText = document.getElementById('selectedSkusTextVC');
+    if (selectedSkusText) {
+        selectedSkusText.value = skuList;
+    }
+}
+
+
+
+
+
+
+
+
+
+function selectImpButtonVC(imp) {
+    selectedImpVC = imp;
+    // Remove a classe de todos os botões apenas da aba VC
+    document.querySelectorAll('.imp-button[id^="imp"][id$="ButtonVC"]').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+
+    // Adiciona a classe ao botão selecionado
+    const selectedBtn = document.getElementById(`${imp}ButtonVC`);
+    if (selectedBtn) {
+        selectedBtn.classList.add('selected');
+    }
+
+    // Atualiza botões de check/estoque na aba VC
+    updateCheckButtonVC();
+}
+
+function processVCOrders(event) {
+    event.preventDefault();
+    const orderId = document.getElementById('order_id').value.trim();
+    const skuInput = document.getElementById('sku').value.trim();
+    const loja = document.getElementById('loja').value;
+    const oxfordPainel = document.getElementById('oxford_painel').value;
+    const cliente = document.getElementById('cliente').value.trim();
+    const message = document.getElementById('vcErrorMessage');
+
+    // Separar SKUs por vírgula e remover espaços
+    const skus = skuInput.split(',').map(sku => sku.trim()).filter(sku => sku);
+    if (skus.length === 0) {
+        message.textContent = 'Por favor, insira pelo menos um SKU válido.';
+        return;
+    }
+
+    message.textContent = '';
+    // Enviar cada SKU como um pedido separado
+    const promises = skus.map(sku => {
+        const data = { order_id: orderId, sku, loja, oxford_painel: oxfordPainel, cliente };
+        return fetch('/process_vc', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).then(res => res.json());
+    });
+
+    Promise.all(promises)
+        .then(results => {
+            console.log('[DEBUG] Process VC orders responses:', results);
+            const errors = results.filter(r => !r.success).map(r => r.message).join('; ');
+            if (errors) {
+                message.textContent = `Erro ao processar alguns SKUs: ${errors}`;
+                return;
+            }
+            alert('Pedidos processados com sucesso!');
+            document.getElementById('order_id').value = '';
+            document.getElementById('sku').value = '';
+            document.getElementById('loja').value = 'Whatsapp';
+            document.getElementById('oxford_painel').value = '';
+            document.getElementById('cliente').value = '';
+            document.getElementById('cliente-field').style.display = 'none';
+            loadOrdersVC();
+        })
+        .catch(err => {
+            console.error('[DEBUG] Error processing VC orders:', err);
+            message.textContent = 'Erro ao processar pedidos: ' + err.message;
+        });
+}
+
+
+
+function addClickHandlersVC() {
+    const skuBoxes = document.querySelectorAll('.sku-box[data-vc="true"]');
+    console.log('[DEBUG] Adding click handlers to', skuBoxes.length, 'VC SKU boxes');
+    skuBoxes.forEach(box => {
+        box.removeEventListener('click', handleBoxClickVC);
+        box.addEventListener('click', handleBoxClickVC);
+        console.log('[DEBUG] Click handler added to SKU box:', box.getAttribute('data-sku'));
+    });
+}
+
+function handleBoxClickVC() {
+    const sku = this.getAttribute('data-sku');
+    const orderId = this.getAttribute('data-order-id');
+    this.classList.toggle('clicked');
+
+    if (this.classList.contains('clicked')) {
+        selectedSkusVC.push(sku);
+        selectedOrdersVC.add(orderId);
+    } else {
+        const index = selectedSkusVC.indexOf(sku);
+        if (index !== -1) selectedSkusVC.splice(index, 1);
+        selectedOrdersVC.delete(orderId);
+    }
+
+    console.log('[DEBUG] Selected VC SKUs:', selectedSkusVC);
+    console.log('[DEBUG] Selected VC Orders:', Array.from(selectedOrdersVC));
+
+    updateSelectedCountVC();
+    updateCheckButtonVC();
+    updateSelectedSkusTextVC();
+    showAdjustmentsVC(selectedSkusVC.length > 0 ? sku : null);
+}
+
+
+
+
+
+// Função para obter a data/hora correta no fuso de Brasília (UTC-3)
+async function checkSelectedOrdersVC() {
+    if (selectedOrdersVC.size === 0) {
+        alert('Nenhum SKU selecionado para checkar.');
+        return;
+    }
+    if (!selectedImpVC) {
+        alert('Selecione uma impressora (Imp 1, Imp 2, Imp 3 ou Lona) antes de checkar.');
+        return;
+    }
+
+    const skuList = Array.from(document.querySelectorAll('.sku-box.clicked[data-vc="true"]'))
+                         .map(box => box.getAttribute('data-sku'))
+                         .join(',');
+
+    const confirmCheck = confirm(`Deseja realmente CHECKAR os pedidos ViaCores abaixo?\n\nSKUs: ${skuList}\n\nEssa ação não pode ser desfeita.`);
+    if (!confirmCheck) {
+        console.log('[DEBUG] Check VC cancelado pelo usuário.');
+        return;
+    }
+
+    const orderIds = Array.from(selectedOrdersVC);
+    const skus = Array.from(document.querySelectorAll('.sku-box.clicked[data-vc="true"]')).map(box => ({
+        sku: box.getAttribute('data-sku'),
+        orderId: box.getAttribute('data-order-id'),
+        section: box.getAttribute('data-section'),
+        isMotoboy: box.classList.contains('motoboy'),
+        isCanceled: box.classList.contains('canceled')
+    }));
+    const skuListAgain = skus.map(s => s.sku).join(',');
+    console.log('[DEBUG] Checking VC orders:', { orderIds, skus, skuListAgain, impressora: selectedImpVC });
+
+    try {
+        const response = await fetch('/check_selected_orders_vc', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: orderIds, producao: 'Impressão', impressora: selectedImpVC })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        console.log('[DEBUG] Check VC orders response:', data);
+
+        if (data.success) {
+            const now = getBrasiliaTimeString();
+            const tbody = document.getElementById('vcCheckedOrdersBody');
+            skus.forEach(s => {
+                const order = data.checked_orders.find(o => o.id == s.orderId);
+                const row = document.createElement('tr');
+                if (s.isMotoboy) row.classList.add('motoboy');
+                if (s.isCanceled) row.classList.add('canceled');
+                const envio = order.status === 'cancelado' ? 'CANCELADO' : 
+                              order.status === 'motoboy' ? 'Motoboy' : 'Coleta';
+                row.innerHTML = `
+                    <td>${order ? order.order_id : 'N/A'}</td>
+                    <td>${s.sku}</td>
+                    <td>${order ? order.loja : 'N/A'}</td>
+                    <td>Impressão</td>
+                    <td>${selectedImpVC}</td>
+                    <td>${now}</td>
+                `;
+                tbody.prepend(row);
+                console.log('[DEBUG] Added to VC history:', {
+                    orderId: s.orderId, sku: s.sku, loja: order.loja,
+                    producao: 'Impressão', impressora: selectedImpVC, now
+                });
+            });
+            document.querySelectorAll('.sku-box.clicked[data-vc="true"]').forEach(box => {
+                const sku = box.getAttribute('data-sku');
+                const orderId = box.getAttribute('data-order-id');
+                box.remove();
+                const index = selectedSkusVC.indexOf(sku);
+                if (index !== -1) selectedSkusVC.splice(index, 1);
+                selectedOrdersVC.delete(orderId);
+            });
+
+            copySelectedSkusToClipboard(skuListAgain);
+            updateCheckButtonVC();
+            updateSelectedCountVC();
+            updateSelectedSkusTextVC();
+            document.getElementById('vcCheckedOrdersTable').style.display = 'table';
+            document.getElementById('vcTotalCheck').style.display = 'block';
+
+            localStorage.removeItem('vc_selected_skus');
+            localStorage.removeItem('vc_selected_orders');
+            localStorage.removeItem('vc_selected_imp');
+            localStorage.setItem('activeTab', 'site');
+            loadOrdersVC();
+            updateCheckButtonVC();
+            updateSelectedCountVC();
+            updateSelectedSkusTextVC();
+        } else {
+            document.getElementById('vcErrorMessage').textContent = data.message || 'Erro ao checkar pedidos ViaCores';
+            console.error('[DEBUG] Check VC orders failed:', data.message);
+        }
+    } catch (err) {
+        console.error('[DEBUG] Error checking VC orders:', err);
+        document.getElementById('vcErrorMessage').textContent = 'Erro ao checkar pedidos ViaCores: ' + err.message;
+    }
+}
+
+
+// Função para checkar pedidos ViaCores (Estoque)
+async function checkSelectedOrdersEstoqueVC() {
+    if (selectedOrdersVC.size === 0) {
+        alert('Nenhum SKU selecionado para checkar.');
+        return;
+    }
+
+    const orderIds = Array.from(selectedOrdersVC);
+    const skus = Array.from(document.querySelectorAll('.sku-box.clicked[data-vc="true"]')).map(box => ({
+        sku: box.getAttribute('data-sku'),
+        orderId: box.getAttribute('data-order-id'),
+        section: box.getAttribute('data-section'),
+        isMotoboy: box.classList.contains('motoboy'),
+        isCanceled: box.classList.contains('canceled')
+    }));
+    const skuList = skus.map(s => s.sku).join(',');
+    console.log('[DEBUG] Checking VC orders (Estoque):', { orderIds, skus, skuList });
+
+    try {
+        const response = await fetch('/check_selected_orders_vc', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: orderIds, producao: 'Estoque', impressora: '' })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        console.log('[DEBUG] Check VC orders (Estoque) response:', data);
+
+        if (data.success) {
+            const now = getBrasiliaTimeString();
+            const tbody = document.getElementById('vcCheckedOrdersBody');
+            skus.forEach(s => {
+                const order = data.checked_orders.find(o => o.id == s.orderId);
+                const row = document.createElement('tr');
+                if (s.isMotoboy) row.classList.add('motoboy');
+                if (s.isCanceled) row.classList.add('canceled');
+                const envio = order.status === 'cancelado' ? 'CANCELADO' : 
+                              order.status === 'motoboy' ? 'Motoboy' : 'Coleta';
+                row.innerHTML = `
+                    <td>${order ? order.order_id : 'N/A'}</td>
+                    <td>${s.sku}</td>
+                    <td>${order ? order.loja : 'N/A'}</td>
+                    <td>Estoque</td>
+                    <td>N/A</td>
+                    <td>${now}</td>
+                `;
+                tbody.prepend(row); // Adiciona ao topo para o mais novo aparecer primeiro
+                console.log('[DEBUG] Added to VC history (Estoque):', { orderId: s.orderId, sku: s.sku, loja: order.loja, producao: 'Estoque', now });
+            });
+            document.querySelectorAll('.sku-box.clicked[data-vc="true"]').forEach(box => {
+                const sku = box.getAttribute('data-sku');
+                const orderId = box.getAttribute('data-order-id');
+                box.remove();
+                const index = selectedSkusVC.indexOf(sku);
+                if (index !== -1) selectedSkusVC.splice(index, 1);
+                selectedOrdersVC.delete(orderId);
+            });
+            copySelectedSkusToClipboard(skuList);
+            updateCheckButtonVC();
+            updateSelectedCountVC();
+            updateSelectedSkusTextVC();
+            document.getElementById('vcCheckedOrdersTable').style.display = 'table';
+            document.getElementById('vcTotalCheck').style.display = 'block';
+            selectedSkusVC = [];
+            localStorage.removeItem('vc_selected_skus');
+            localStorage.removeItem('vc_selected_orders');
+            localStorage.removeItem('vc_selected_imp');
+            localStorage.setItem('activeTab', 'site');
+            loadOrdersVC(); // Recarrega tudo
+            updateCheckButtonVC(); // Some botão
+            updateSelectedCountVC();
+            updateSelectedSkusTextVC();
+
+        } else {
+            document.getElementById('vcErrorMessage').textContent = data.message || 'Erro ao checkar pedidos ViaCores (Estoque)';
+            console.error('[DEBUG] Check VC orders (Estoque) failed:', data.message);
+        }
+    } catch (err) {
+        console.error('[DEBUG] Error checking VC orders (Estoque):', err);
+        document.getElementById('vcErrorMessage').textContent = 'Erro ao checkar pedidos ViaCores (Estoque): ' + err.message;
+    }
+}
+
+
+
+
+
+async function loadOrdersVC() {
+    try {
+        console.log('[DEBUG] Loading VC orders...');
+        const response = await fetch('/get_all_orders_vc');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        console.log('[DEBUG] VC orders response:', data);
+        if (data.success) {
+            if (Array.isArray(data.orders)) {
+                displaySkusVC(data.orders);
+                updateOrderListsVC(data);
+            } else {
+                console.error('[DEBUG] data.orders is not an array for VC:', data.orders);
+                document.getElementById('vcErrorMessage').textContent = 'Erro: Dados de pedidos ViaCores inválidos.';
+            }
+        } else {
+            document.getElementById('vcErrorMessage').textContent = data.message || 'Erro ao carregar pedidos ViaCores';
+        }
+        loadCheckedHistoryVC();
+    } catch (err) {
+        console.error('[DEBUG] Error loading VC orders:', err);
+        document.getElementById('vcErrorMessage').textContent = 'Erro ao carregar pedidos ViaCores: ' + err.message;
+    }
+}
+
+// Função ajustada para carregar histórico de pedidos checkados com ordenação correta
+async function loadCheckedHistoryVC() {
+    try {
+        console.log('[DEBUG] Loading checked VC history...');
+        const response = await fetch('/get_checked_orders_vc');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        console.log('[DEBUG] Checked VC orders response:', data);
+        if (data.success) {
+            const tbody = document.getElementById('vcCheckedOrdersBody');
+            const totalCheck = document.getElementById('vcTotalCheck');
+            tbody.innerHTML = '';
+            let totalSkusChecked = 0;
+
+            // Normalizar capitalização de impressora
+            const valid_impressoras = {
+                'imp 1': 'Imp 1', 'imp1': 'Imp 1',
+                'imp 2': 'Imp 2', 'imp2': 'Imp 2',
+                'imp 3': 'Imp 3', 'imp3': 'Imp 3',
+                'imp 4': 'Lona', 'imp4': 'Lona',
+                'lona': 'Lona',
+                '': ''
+            };
+
+            // Ordena os pedidos do mais novo para o mais antigo
+            data.orders.sort((a, b) => {
+                const dateA = a.checked_at ? new Date(a.checked_at.replace(/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2}):(\d{2})/, '$3-$2-$1 $4:$5:$6')) : new Date(0);
+                const dateB = b.checked_at ? new Date(b.checked_at.replace(/(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2}):(\d{2})/, '$3-$2-$1 $4:$5:$6')) : new Date(0);
+                return dateB - dateA; // Mais novo em cima, mais antigo embaixo
+            });
+
+            data.orders.forEach(order => {
+                const isMotoboy = order.status === 'motoboy';
+                const isCanceled = order.status === 'cancelado';
+                const impressora = valid_impressoras[order.impressora.toLowerCase()] || order.impressora;
+                const row = document.createElement('tr');
+                if (isMotoboy) row.classList.add('motoboy');
+                if (isCanceled) row.classList.add('canceled');
+                row.innerHTML = `
+                    <td>${order.order_id || 'N/A'}</td>
+                    <td>${order.sku || 'N/A'}</td>
+                    <td>${order.loja || 'N/A'}</td>
+                    <td>${order.producao || 'N/A'}</td>
+                    <td>${impressora}</td>
+                    <td>${order.checked_at || 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+                totalSkusChecked++;
+            });
+            totalCheck.querySelector('span').textContent = totalSkusChecked;
+            totalCheck.style.display = totalSkusChecked > 0 ? 'block' : 'none';
+            document.getElementById('vcCheckedOrdersTable').style.display = totalSkusChecked > 0 ? 'table' : 'none';
+        } else {
+            document.getElementById('vcErrorMessage').textContent = data.message || 'Erro ao carregar histórico ViaCores';
+        }
+    } catch (err) {
+        console.error('[DEBUG] Error loading checked VC history:', err);
+        document.getElementById('vcErrorMessage').textContent = 'Erro ao carregar histórico ViaCores: ' + err.message;
+    }
+}
+
+function updateOrderListsVC(data) {
+    const invalidOrdersList = document.getElementById('vcInvalidOrdersList');
+    invalidOrdersList.innerHTML = '';
+    const seenOrderIds = new Set();
+    const validOrderIds = new Set(Array.isArray(data.orders) ? data.orders.filter(o => o.sku).map(o => o.order_id) : []);
+    console.log('[DEBUG] Valid VC Order IDs:', Array.from(validOrderIds));
+    (data.invalid_orders || []).forEach((order, index) => {
+        const orderId = order.order_id || 'N/A';
+        if (validOrderIds.has(orderId)) {
+            console.log('[DEBUG] Skipping invalid VC order with valid SKU:', orderId);
+            return;
+        }
+        const error = order.error ? ` (${order.sku || 'N/A'}: ${order.error})` : '';
+        const uniqueKey = `${orderId}-${index}`;
+        if (!seenOrderIds.has(uniqueKey)) {
+            const li = document.createElement('li');
+            li.setAttribute('data-order-id', orderId);
+            li.setAttribute('data-unique-key', uniqueKey);
+            if (order.status === 'motoboy') {
+                li.classList.add('motoboy');
+            }
+            const textSpan = document.createElement('span');
+            textSpan.textContent = `${orderId} - SKU: ${order.sku || 'N/A'}${error}`;
+            const deleteBtn = document.createElement('span');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '🗑️';
+            deleteBtn.onclick = () => deleteInvalidOrderVC(orderId, uniqueKey);
+            li.appendChild(textSpan);
+            li.appendChild(deleteBtn);
+            invalidOrdersList.appendChild(li);
+            seenOrderIds.add(uniqueKey);
+            console.log('[DEBUG] Added invalid VC order to list:', { orderId, error, uniqueKey });
+        }
+    });
+}
+
+function deleteInvalidOrderVC(orderId, uniqueKey) {
+    if (orderId === 'N/A') {
+        const li = document.querySelector(`li[data-unique-key="${uniqueKey}"]`);
+        if (li) {
+            li.remove();
+            console.log('[DEBUG] Removed invalid VC order (N/A) from list:', uniqueKey);
+        }
+        return;
+    }
+
+    fetch('/delete_invalid_order_vc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: orderId })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        console.log('[DEBUG] Delete invalid VC order response:', data);
+        if (data.success) {
+            const li = document.querySelector(`li[data-unique-key="${uniqueKey}"]`);
+            if (li) {
+                li.remove();
+                console.log('[DEBUG] Removed invalid VC order from list:', { orderId, uniqueKey });
+            }
+            alert(data.message);
+            loadOrdersVC();
+        } else {
+            document.getElementById('vcErrorMessage').textContent = data.message || 'Erro ao deletar pedido inválido ViaCores';
+        }
+    })
+    .catch(err => {
+        console.error('[DEBUG] Error deleting invalid VC order:', err);
+        document.getElementById('vcErrorMessage').textContent = 'Erro ao deletar pedido inválido ViaCores: ' + err.message;
+    });
+}
+
+function toggleCheckedHistoryVC() {
+    const table = document.getElementById('vcCheckedOrdersTable');
+    const totalCheck = document.getElementById('vcTotalCheck');
+    table.style.display = table.style.display === 'none' ? 'table' : 'none';
+    totalCheck.style.display = table.style.display === 'none' ? 'none' : 'block';
+    if (table.style.display === 'table') {
+        loadCheckedHistoryVC();
+    }
+}
+
+function resetSelectedChecksVC() {
+    fetch('/reset_selected_checks_vc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            loadOrdersVC();
+            toggleCheckedHistoryVC();
+            alert('Checks resetados com sucesso!');
+        } else {
+            alert('Erro ao resetar checks: ' + (data.message || 'Erro desconhecido'));
+        }
+    })
+    .catch(err => alert('Erro ao resetar checks: ' + err.message));
+}
+
+function activateVCTab() {
+    // Remove a classe 'active' de todas as abas e painéis
+    document.querySelectorAll('.nav-link').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('show', 'active'));
+
+    // Ativa a aba ViaCores
+    const vcTab = document.getElementById('site-tab');
+    const vcPane = document.getElementById('site');
+    if (vcTab && vcPane) {
+        vcTab.classList.add('active');
+        vcPane.classList.add('show', 'active');
+        console.log('[DEBUG] Activated ViaCores tab');
+    } else {
+        console.error('[DEBUG] ViaCores tab or pane not found');
+    }
+
+    // Salva o estado no localStorage
+    localStorage.setItem('activeTab', 'site');
+}
+
+window.onload = function() {
+    console.log('[DEBUG] Inicializando página');
+
+    // Carrega os pedidos de acordo com a aba ativa
+    const activeTab = localStorage.getItem('activeTab') || 'site'; // 'site' como padrão
+    console.log('[DEBUG] Active tab from localStorage:', activeTab);
+
+    // Remove a classe 'active' de todas as abas e painéis
+    document.querySelectorAll('.nav-link').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('show', 'active'));
+
+    // Ativa a aba e o painel correspondentes
+    const tab = document.getElementById(`${activeTab}-tab`);
+    const pane = document.getElementById(activeTab);
+    if (tab && pane) {
+        tab.classList.add('active');
+        pane.classList.add('show', 'active');
+        console.log('[DEBUG] Ativada aba:', activeTab);
+    } else {
+        console.error('[DEBUG] Aba ou painel não encontrado para:', activeTab);
+        // Ativa a aba ViaCores como padrão se a aba não for encontrada
+        const defaultTab = document.getElementById('site-tab');
+        const defaultPane = document.getElementById('site');
+        if (defaultTab && defaultPane) {
+            defaultTab.classList.add('active');
+            defaultPane.classList.add('show', 'active');
+            console.log('[DEBUG] Ativada aba padrão: site');
+        }
+    }
+
+    // Carrega os pedidos correspondentes à aba ativa
+    if (activeTab === 'site') {
+        loadOrdersVC();
+    } else if (activeTab === 'mercado-livre') {
+        loadOrders();
+    } else if (activeTab === 'shopee') {
+        loadOrdersShopee();
+    }
+
+    // Listener para o campo oxford_painel (usado na aba ViaCores)
+    document.getElementById('oxford_painel').addEventListener('change', function() {
+        const clienteField = document.getElementById('cliente-field');
+        if (this.value === 'Oxford' || this.value === 'Painel') {
+            clienteField.style.display = 'block';
+        } else {
+            clienteField.style.display = 'none';
+            document.getElementById('cliente').value = '';
+        }
+    });
+
+    // Listener para cliques nas abas para atualizar o localStorage
+    document.querySelectorAll('.nav-link').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabId = this.id.replace('-tab', '');
+            localStorage.setItem('activeTab', tabId);
+            console.log('[DEBUG] Active tab set to:', tabId);
+        });
+    });
+};
+// Função para processar pedidos com prioridade
+function processPriorityVCOrders() {
+    const orderId = document.getElementById('order_id').value.trim();
+    const skuInput = document.getElementById('sku').value.trim();
+    const loja = document.getElementById('loja').value;
+    const oxfordPainel = document.getElementById('oxford_painel').value;
+    const cliente = document.getElementById('cliente').value.trim();
+    const message = document.getElementById('vcErrorMessage');
+
+    // Separar SKUs por vírgula e remover espaços
+    const skus = skuInput.split(',').map(sku => sku.trim()).filter(sku => sku);
+    if (skus.length === 0) {
+        message.textContent = 'Por favor, insira pelo menos um SKU válido.';
+        return;
+    }
+
+    message.textContent = '';
+    // Enviar cada SKU como um pedido separado com prioridade
+    const promises = skus.map(sku => {
+        const data = { order_id: orderId, sku, loja, oxford_painel: oxfordPainel, cliente, priority: true };
+        return fetch('/process_vc', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).then(res => res.json());
+    });
+
+    Promise.all(promises)
+        .then(results => {
+            console.log('[DEBUG] Process Priority VC orders responses:', results);
+            const errors = results.filter(r => !r.success).map(r => r.message).join('; ');
+            if (errors) {
+                message.textContent = `Erro ao processar alguns SKUs: ${errors}`;
+                return;
+            }
+            alert('Pedidos prioritários processados com sucesso!');
+            document.getElementById('order_id').value = '';
+            document.getElementById('sku').value = '';
+            document.getElementById('loja').value = 'Whatsapp';
+            document.getElementById('oxford_painel').value = '';
+            document.getElementById('cliente').value = '';
+            document.getElementById('cliente-field').style.display='none';
+            loadOrdersVC();
+        })
+        .catch(err => {
+            console.error('[DEBUG] Error processing Priority VC orders:', err);
+            message.textContent = 'Erro ao processar pedidos prioritários: ' + err.message;
+        });
+}
+
+// Atualizar a função displayенту
+
+function displaySkusVC(orders) {
+    const sectionsData = {
+        'itens_especiais': [], 'cl': [], 'ff': [], 'kd': [], 'kc': [], 'pc': [], 'pr': [], 'pv': [], 'pv-especial': [], 'ph': [], 'tp': [], 'vc': [], 'fh': [], 'rv': []
+    };
+    let totalSkus = 0;
+
+    orders.forEach(order => {
+        if (order.checked) {
+            console.log('[DEBUG] Skipping checked VC order:', { id: order.id, sku: order.sku });
+            return;
+        }
+        const sku = order.sku;
+        if (sku) {
+            const section = getSectionFromSkuVC(sku);
+            if (section !== 'N/A' && section in sectionsData) {
+                sectionsData[section].push({
+                    sku: sku,
+                    order_id: String(order.id),
+                    loja: order.loja,
+                    status: order.status || '',
+                    priority: order.priority || false // Adiciona campo priority
+                });
+                totalSkus++;
+            } else {
+                console.warn('[DEBUG] Invalid section for VC SKU:', { sku, section });
+            }
+        } else {
+            console.warn('[DEBUG] Skipping VC order with no SKU:', { order });
+        }
+    });
+
+    console.log('[DEBUG] VC Sections data:', sectionsData);
+    console.log('[DEBUG] Total VC SKUs:', totalSkus);
+    updateTotalSkuCountVC(totalSkus);
+
+    for (const [section, items] of Object.entries(sectionsData)) {
+        const container = document.getElementById(sectionsVC[section]);
+        if (!container) {
+            console.error('[DEBUG] Container not found for VC section:', section);
+            continue;
+        }
+        container.innerHTML = '';
+        if (items.length > 0) {
+            items.sort((a, b) => a.sku.localeCompare(b.sku));
+            items.forEach(item => {
+                const span = document.createElement('span');
+                span.className = `sku-box ${item.status === 'motoboy' ? 'motoboy' : ''} ${item.status === 'cancelado' ? 'canceled' : ''} ${item.priority ? 'priority' : ''}`;
+                span.setAttribute('data-sku', item.sku);
+                span.setAttribute('data-order-id', item.order_id);
+                span.setAttribute('data-section', section);
+                span.setAttribute('data-vc', 'true');
+                span.textContent = item.sku;
+                container.appendChild(span);
+                console.log('[DEBUG] Added VC SKU box:', { section, sku: item.sku, order_id: item.order_id, priority: item.priority });
+            });
+        } else {
+            container.textContent = 'Nenhum SKU disponível.';
+        }
+    }
+    addClickHandlersVC();
+}
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const tipoSelect = document.getElementById('oxford_painel');
+    const orderIdInput = document.getElementById('order_id');
+    const skuInput = document.getElementById('sku');
+
+    function atualizarSKUautomatico() {
+        const tipo = tipoSelect.value.trim();
+        const orderId = orderIdInput.value.trim();
+
+        if (['Oxford', 'Malha', 'Lona', 'Decor'].includes(tipo) && orderId) {
+            skuInput.value = `${orderId} ${tipo.toUpperCase()}`;
+            skuInput.setAttribute('readonly', true); // impede edição manual
+        } else {
+            skuInput.value = '';
+            skuInput.removeAttribute('readonly');
+        }
+    }
+
+    // Atualiza quando o tipo ou o ID mudar
+    tipoSelect.addEventListener('change', atualizarSKUautomatico);
+    orderIdInput.addEventListener('input', atualizarSKUautomatico);
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Listener para cliques nas abas
+    document.querySelectorAll('.nav-link').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabId = this.id.replace('-tab', '');
+            localStorage.setItem('activeTab', tabId);
+            console.log('[DEBUG] Active tab set to:', tabId);
+
+            // Se a aba VC for clicada, reiniciar estado e recarregar pedidos
+            if (tabId === 'site') {
+                resetVcTab();
+                loadOrdersVC();
+            }
+        });
+    });
+});
+
+function showAdjustmentsVC(sku) {
+    const adjustOptions = document.getElementById('adjustOptionsVC');
+    if (!adjustOptions) {
+        console.error('[DEBUG] Element #adjustOptionsVC not found. Ensure <div id="adjustOptionsVC"> is present in the ViaCores tab HTML.');
+        return;
+    }
+    if (!sku || selectedSkusVC.length === 0) {
+        adjustOptions.innerHTML = '';
+        adjustOptions.style.display = 'none';
+        return;
+    }
+    adjustOptions.style.display = 'block';
+    adjustOptions.innerHTML = `
+        <div>Ajustes para SKU: ${sku}</div>
+        <button class="imp-button" id="imp1ButtonVC" data-imp="imp1">Imp 1</button>
+        <button class="imp-button" id="imp2ButtonVC" data-imp="imp2">Imp 2</button>
+        <button class="imp-button" id="imp3ButtonVC" data-imp="imp3">Imp 3</button>
+        <button class="imp-button" id="lonaButtonVC" data-imp="lona">Lona</button>
+    `;
+    console.log('[DEBUG] Adjustments displayed for SKU:', sku);
+    // Adicionar listeners aos botões de impressora
+    document.querySelectorAll('.imp-button').forEach(btn => {
+        btn.addEventListener('click', () => selectImpButtonVC(btn.getAttribute('data-imp')));
+    });
+}
+function getBrasiliaTimeString() {
+    return new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+}
+
+
+</script>
+</body>
+</html>

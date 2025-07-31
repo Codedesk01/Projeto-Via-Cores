@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de SKU - {{ sku }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/Logo.png') }}" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="text-center">
+        <img src="{{ url_for('static', filename='img/viacores.png') }}" alt="Logo ViaCores" class="logo">
+    </div>
+    <div class="container mt-5">
+        <h1 class="mb-4 text-center">Relatório de SKU: {{ sku }}</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert alert-info" role="alert">
+                    {% for category, message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <h3>Histórico de Transações</h3>
+        {% if transactions %}
+            <ul class="list-group mb-4">
+                {% for transaction in transactions %}
+                    <li class="list-group-item">
+                        {{ 'Entrada' if transaction[0] == 'entrada' else 'Saída' }} {{ transaction[2] }} - {{ transaction[1] }} unidade{{ 's' if transaction[1] > 1 else '' }}
+                        {% if sku[:2] in skus_que_precisam_caixa_prefixos %}
+                            (Caixa: {{ transaction[3] if transaction[3] else 'N/A' }})
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+            <h4>Total Entradas: {{ total_entries }} unidade{{ 's' if total_entries != 1 else '' }}</h4>
+            <h4>Total Saídas: {{ total_exits }} unidade{{ 's' if total_exits != 1 else '' }}</h4>
+            <h4>TOTAL: {{ item[1] }} unidade{{ 's' if item[1] != 1 else '' }}</h4>
+        {% else %}
+            <p class="text-muted">Nenhuma transação encontrada para este SKU.</p>
+            <h4>TOTAL: {{ item[1] }} unidade{{ 's' if item[1] != 1 else '' }}</h4>
+        {% endif %}
+
+        <div class="text-center">
+            <a href="{{ url_for('download_sku_report', sku=sku) }}" class="btn btn-dark mb-2">Imprimir Relatório</a>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">Voltar</a>
+        </div>
+
+        <div class="text-center mt-4">
+            <footer>Versão Alpha 1.9 --- Panther Code</footer>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
