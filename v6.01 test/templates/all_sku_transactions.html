@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório de Transações - ViaCores</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='img/Logo.png') }}" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* General Styling */
+        body {
+            background-color: #f7f8fc;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #2d3748;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Ensure Hidden Class Works */
+        .hidden {
+            display: none !important; /* High specificity to prevent overrides */
+        }
+
+        /* Logo */
+        .logo {
+            max-width: 200px;
+            margin: 2.5rem auto;
+            display: block;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        /* Card Container */
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+            padding: 2.5rem;
+            background: #ffffff;
+            margin-bottom: 2rem;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Headings */
+        h2, h5 {
+            font-weight: 700;
+            color: #1a3c6d;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            letter-spacing: -0.02em;
+        }
+
+        h5 {
+            font-size: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        /* Search Bar */
+        .input-group {
+            max-width: 650px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .form-control {
+            border-radius: 10px 0 0 10px;
+            border: 1px solid #d1d5db;
+            padding: 0.875rem;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #1a3c6d;
+            box-shadow: 0 0 0 4px rgba(26, 60, 109, 0.15);
+        }
+
+        .btn-primary {
+            border-radius: 0 10px 10px 0;
+            background-color: #1a3c6d;
+            border-color: #1a3c6d;
+            padding: 0.875rem 1.75rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #143057;
+            border-color: #143057;
+            transform: translateY(-2px);
+        }
+
+        .form-text {
+            font-size: 0.85rem;
+            color: #6b7280;
+            text-align: center;
+        }
+
+        /* Buttons */
+        .btn-success, .btn-dark, .btn-outline-secondary {
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .btn-success {
+            background-color: #2f855a;
+            border-color: #2f855a;
+        }
+
+        .btn-success:hover {
+            background-color: #276749;
+            border-color: #276749;
+            transform: translateY(-2px);
+        }
+
+        .btn-dark {
+            background-color: #2d3748;
+            border-color: #2d3748;
+        }
+
+        .btn-dark:hover {
+            background-color: #1a202c;
+            border-color: #1a202c;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline-secondary {
+            border-color: #6b7280;
+            color: #6b7280;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #6b7280;
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .table {
+            margin-bottom: 0;
+            font-size: 0.95rem;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table th, .table td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .table thead th {
+            background-color: #f9fafb;
+            color: #1a3c6d;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid #d1d5db;
+        }
+
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: #f9fafb;
+        }
+
+        .table-striped tbody tr:hover {
+            background-color: #edf2f7;
+            transition: background-color 0.2s ease;
+        }
+
+        /* SKU Image */
+        .sku-image {
+            width: 130px;
+            height: 130px;
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+            display: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .sku-image.loaded {
+            display: block;
+            opacity: 1;
+        }
+
+        .image-placeholder {
+            width: 130px;
+            height: 130px;
+            background-color: #e5e7eb;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-size: 0.9rem;
+            text-align: center;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-image {
+            border-radius: 8px;
+            font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+            margin-top: 0.75rem;
+        }
+
+        /* Premium Pagination */
+        .pagination-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: #f9fafb;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .pagination-controls .btn {
+            border-radius: 50px;
+            padding: 0.6rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            background-color: #1a3c6d;
+            border: none;
+            color: #fff;
+            transition: background-color 0.3s ease, transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .pagination-controls .btn:hover {
+            background-color: #143057;
+            transform: translateY(-2px);
+        }
+
+        .pagination-controls .btn:disabled {
+            background-color: #d1d5db;
+            color: #6b7280;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #pageInfo {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1a3c6d;
+            padding: 0.5rem 1rem;
+            background-color: #edf2f7;
+            border-radius: 50px;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        /* Modal */
+        .modal-content {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            background-color: #1a3c6d;
+            color: #fff;
+            border-radius: 16px 16px 0 0;
+            padding: 1.25rem 1.75rem;
+        }
+
+        .modal-body {
+            padding: 2rem;
+            max-height: calc(90vh - 120px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f9fafb;
+        }
+
+        .modal-full-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .modal-xl {
+            max-width: 90vw;
+        }
+
+        /* List Group for Top Items */
+        .list-group-item {
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+            color: #2d3748;
+            background-color: #f9fafb;
+            padding: 0.85rem 1.25rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .list-group-item:hover {
+            background-color: #edf2f7;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 3rem;
+            padding: 1.5rem 0;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        footer small {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .logo {
+                max-width: 160px;
+            }
+
+            .card {
+                padding: 1.75rem;
+            }
+
+            .table th, .table td {
+                font-size: 0.9rem;
+                padding: 0.75rem;
+            }
+
+            .sku-image, .image-placeholder {
+                width: 100px;
+                height: 100px;
+            }
+
+            .input-group {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .form-control {
+                border-radius: 10px;
+            }
+
+            .btn-primary {
+                border-radius: 10px;
+            }
+
+            .pagination-controls {
+                padding: 0.5rem 1rem;
+            }
+
+            #pageInfo {
+                font-size: 0.9rem;
+                min-width: 100px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="text-center">
+        <img src="{{ url_for('static', filename='img/viacores.png') }}" alt="Logo ViaCores" class="logo">
+    </div>
+
+    <div class="container my-5">
+        <div class="card shadow p-4">
+            <h2 class="text-center mb-4">Relatório de Transações de SKUs</h2>
+
+            <!-- Barra de pesquisa -->
+            <form id="searchForm" method="get" class="mb-4">
+                <div class="input-group mx-auto" style="max-width: 600px;">
+                    <input type="text" class="form-control" id="sku" name="sku"
+                        value="{{ request.args.get('sku', '') }}"
+                        placeholder="Buscar por SKU, prefixo ou tema (ex: PV, FF, FROZEN)">
+                    <button type="submit" class="btn btn-primary">Buscar</button>
+                </div>
+                <div class="form-text text-center mt-1">Separe múltiplos termos por vírgula</div>
+            </form>
+
+            <!-- Botões de impressão -->
+            <div class="text-end mb-3">
+                {% if request.args.get('sku') %}
+                    <a href="{{ url_for('download_all_sku_transactions', sku=request.args.get('sku')) }}" class="btn btn-success">Imprimir Resultado</a>
+                {% endif %}
+                <div class="text-start mt-2">
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Voltar ao Início</a>
+                </div>
+                <a href="{{ url_for('download_all_sku_transactions') }}" class="btn btn-dark">Imprimir Todos</a>
+            </div>
+
+            <!-- Itens que mais saíram -->
+            {% if top_exited_items %}
+                <h5>Top 5 SKUs com mais saídas:</h5>
+                <ul class="list-group mb-4">
+                    {% for item in top_exited_items %}
+                        <li class="list-group-item">{{ item[0] }}: {{ item[1] }} unidade{{ 's' if item[1] != 1 else '' }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+                       
+            <!-- Filtros por Classificação -->
+            <h5>Filtros por Classificação:</h5>
+<div class="mb-3 d-flex flex-wrap gap-2">
+  <button type="button" class="btn btn-outline-secondary btn-sm filter-btn" data-filter="all">Todos</button>
+  <button type="button" class="btn btn-outline-secondary btn-sm filter-btn" data-filter="Estoque">Estoque</button>
+  <button type="button" class="btn btn-outline-secondary btn-sm filter-btn" data-filter="Cancelado">Cancelado</button>
+  <button type="button" class="btn btn-outline-secondary btn-sm filter-btn" data-filter="Devolucao">Devolução</button>
+  <button type="button" class="btn btn-outline-secondary btn-sm filter-btn" data-filter="Vendas">Vendas</button>
+  <button type="button" class="btn btn-outline-secondary btn-sm filter-btn" data-filter="Outros">Outros</button>
+</div>
+            <!-- Lista de transações paginadas -->
+            {% if sku_transactions %}
+                <div id="skuContainer">
+                    {% for sku, data in sku_transactions.items() %}
+                        <div class="sku-page {% if not loop.first %}hidden{% endif %}" data-classificacoes="{{ data.classificacoes|join(',') }}">
+  <div class="d-flex align-items-center mb-3">
+    <h5 class="text-primary me-3">SKU: {{ sku }}</h5>
+    <!-- CORREÇÃO: Usar a variável 'data.quantity' que já contém o saldo final do estoque -->
+    <span class="fw-bold">Quantidade Total: {{ data.quantity }} unidade{{ 's' if data.quantity != 1 else '' }}</span>
+</div>
+
+  <!-- Imagem e botão -->
+  <div class="mb-3">
+    <img src="{{ url_for('get_image', sku=sku) }}" class="sku-image" alt="Imagem de {{ sku }}"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+    <div class="image-placeholder" style="display: none;">Sem Imagem</div>
+    <button class="btn btn-sm btn-secondary btn-image show-image-btn mt-2" data-sku="{{ sku }}"
+            style="display: none;" title="Mostrar Imagem"><i class="bi bi-image"></i> Ver Imagem</button>
+  </div>
+
+  
+
+<!-- Tabela de Transações -->
+<div class="table-wrapper">
+  <table class="table table-bordered table-striped align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>Tipo</th>
+        <th>Data</th>
+        <th>Quantidade</th>
+        <th>Caixa</th>
+        <th>Classificação</th>
+        <th>Observação</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for trans in sku_transactions[sku].transactions|sort(attribute='date|date_to_sortable') %}
+        <tr class="trans-row {{ trans.classificacao }}">
+          <td>
+            {% if trans.type == 'entrada' %}
+              Entrada
+            {% elif trans.type == 'saida' %}
+              Saída
+            {% elif trans.type == 'transferencia' %}
+              Transferência de Caixa
+            {% elif trans.type == 'edit' %}
+              Edição
+            {% else %}
+              {{ trans.type }}
+            {% endif %}
+          </td>
+          <td>{{ trans.date }}</td>
+          <td>
+            {% if trans.type == 'transferencia' %}
+              Atualizado para caixa {{ trans.caixa or 'N/A' }}
+            {% elif trans.type == 'edit' %}
+              Ajustado em {{ trans.quantity }} unidade{{ 's' if trans.quantity != 1 else '' }}
+            {% else %}
+              {{ trans.quantity }} unidade{{ 's' if trans.quantity != 1 else '' }}
+            {% endif %}
+          </td>
+          <td>
+            {% if sku[:2] in skus_que_precisam_caixa_prefixos %}
+              {{ trans.caixa if trans.caixa else 'N/A' }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td>{{ trans.classificacao or '-' }}</td>
+          <td>{{ trans.observacao or '-' }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Paginação -->
+                <div class="pagination-controls mt-4">
+                    <button class="btn btn-outline-secondary" id="prevBtn" disabled>Anterior</button>
+                    <span id="pageInfo" class="fw-bold"></span>
+                    <button class="btn btn-outline-secondary" id="nextBtn">Próximo</button>
+                </div>
+            {% else %}
+                <p class="text-muted text-center">Nenhuma transação encontrada.</p>
+            {% endif %}
+        </div>
+
+        <footer class="text-center mt-4">
+            <small class="text-muted">ViaCores ERP - Versão 5.8  | Desenvolvido por ViaCores</small>
+        </footer>
+    </div>
+
+    <!-- Image Display Modal -->
+    <div class="modal fade" id="imageDisplayModal" tabindex="-1" aria-labelledby="imageDisplayModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageDisplayModalLabel">Imagem do SKU</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <img id="modalImage" src="" alt="Imagem do SKU" class="modal-full-image">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    const filter = this.getAttribute('data-filter');
+    const pages = document.querySelectorAll('.sku-page');
+    let foundVisible = false;
+
+    pages.forEach((page, index) => {
+      const classificacoes = (page.dataset.classificacoes || '').split(',');
+      const rows = page.querySelectorAll('.trans-row');
+      let hasVisibleRow = false;
+
+      // Mostra ou esconde as linhas da tabela
+      rows.forEach(row => {
+        if (filter === 'all' || row.classList.contains(filter)) {
+          row.style.display = '';
+          hasVisibleRow = true;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      // Mostra ou esconde o bloco do SKU completo
+      if (filter === 'all' || classificacoes.includes(filter)) {
+        page.classList.toggle('hidden', !hasVisibleRow);
+        if (!foundVisible && hasVisibleRow) {
+          foundVisible = true;
+          currentPage = index;
+        }
+      } else {
+        page.classList.add('hidden');
+      }
+    });
+
+    // Atualiza o botão ativo
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.remove('btn-dark');
+      b.classList.add('btn-outline-secondary');
+    });
+    this.classList.remove('btn-outline-secondary');
+    this.classList.add('btn-dark');
+
+    // Atualiza a paginação para o primeiro visível
+    const visiblePages = Array.from(pages).filter(p => !p.classList.contains('hidden'));
+    if (visiblePages.length > 0) {
+      currentPage = Array.from(pages).indexOf(visiblePages[0]);
+      showPage(currentPage);
+    } else {
+      document.getElementById('pageInfo').textContent = 'Nenhum resultado encontrado';
+      document.getElementById('prevBtn').disabled = true;
+      document.getElementById('nextBtn').disabled = true;
+    }
+  });
+});
+</script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93de483d7b1bad65',t:'MTc0NjkzMDkxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+</body>
+</html>

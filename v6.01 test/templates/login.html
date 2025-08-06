@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - ViaCores ERP</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/Logo.png') }}" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f4f7fa 0%, #e2e8f0 100%);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            max-width: 900px;
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            text-align: center;
+        }
+        .logo {
+            max-width: 180px;
+            margin-bottom: 25px;
+        }
+        h1 {
+            color: #1a73e8;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        .avatar {
+            width: 120px;
+            height: 120px;
+            margin: 0 15px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        .avatar.consulta { border: 3px solid transparent; }
+        .avatar.consulta:hover { border: 3px solid #1a73e8; }
+        .avatar.conferente { border: 3px solid transparent; }
+        .avatar.conferente:hover { border: 3px solid #06b6d4; }
+        .avatar.impressao { border: 3px solid transparent; }
+        .avatar.impressao:hover { border: 3px solid #059669; }
+        .avatar.admin { border: 3px solid transparent; }
+        .avatar.admin:hover { border: 3px solid #dc2626; }
+        .avatar.pedidos { border: 3px solid transparent; }
+        .avatar.pedidos:hover { border: 3px solid #8b5cf6; }
+        .avatar.producao { border: 3px solid transparent; }
+        .avatar.producao:hover { border: 3px solid #f59e0b; } /* Unique color for producao */
+        .avatar i {
+            font-size: 48px;
+            color: #2c3e50;
+        }
+        .avatar-label {
+            margin-top: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #34495e;
+        }
+        .avatar-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+        .btn-primary {
+            background-color: #1a73e8;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #6b7280;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        .notification {
+            position: relative;
+            margin-top: 15px;
+            padding: 12px 40px 12px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease;
+            transform: translateY(-10px);
+        }
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .notification.error {
+            background-color: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #dc2626;
+        }
+        .notification.success {
+            background-color: #d1fae5;
+            color: #059669;
+        }
+        .notification .close-btn {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 16px;
+            color: inherit;
+        }
+        #notificationsContainer {
+            margin-top: 20px;
+        }
+        .modal-content {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+        .modal-header {
+            border-bottom: none;
+            background-color: #f8fafc;
+            border-radius: 12px 12px 0 0;
+        }
+        .modal-title {
+            color: #1a73e8;
+            font-weight: 600;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #34495e;
+            font-size: 0.95rem;
+        }
+        .form-control {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 0.95rem;
+        }
+        .form-control:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 0.2rem rgba(26, 115, 232, 0.25);
+        }
+        .input-group-text {
+            background-color: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-left: none;
+            border-radius: 0 6px 6px 0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .input-group-text:hover {
+            background-color: #e2e8f0;
+        }
+        .footer {
+            color: #6b7280;
+            font-size: 0.85rem;
+            margin-top: 30px;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            .avatar {
+                width: 100px;
+                height: 100px;
+            }
+            .avatar i {
+                font-size: 40px;
+            }
+            .avatar-container {
+                gap: 20px;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+        @media (max-width: 576px) {
+            .avatar {
+                width: 80px;
+                height: 80px;
+            }
+            .avatar i {
+                font-size: 32px;
+            }
+            .avatar-label {
+                font-size: 0.9rem;
+            }
+            .avatar-container {
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="{{ url_for('static', filename='img/viacores.png') }}" alt="Logo ViaCores" class="logo">
+        <h1><i class="me-2"></i>Login</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert alert-info" role="alert">
+                    {% for category, message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Modal for Impressao Login -->
+        <div class="modal fade" id="impressaoLoginModal" tabindex="-1" aria-labelledby="impressaoLoginModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="impressaoLoginModalLabel">Login Imagens</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="impressaoLoginForm">
+                            <div class="mb-3">
+                                <label for="impressaoPassword" class="form-label">Senha de Imagens</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="impressaoPassword" placeholder="Digite a senha" required>
+                                    <span class="input-group-text toggle-password">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" id="confirmImpressaoLogin" class="btn btn-primary">Entrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Admin Login -->
+        <div class="modal fade" id="adminLoginModal" tabindex="-1" aria-labelledby="adminLoginModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="adminLoginModalLabel">Login Admin</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="adminLoginForm">
+                            <div class="mb-3">
+                                <label for="adminPassword" class="form-label">Senha do Administrador</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="adminPassword" placeholder="Digite a senha" required>
+                                    <span class="input-group-text toggle-password">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" id="confirmAdminLogin" class="btn btn-primary">Entrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Pedidos Login -->
+        <div class="modal fade" id="pedidosLoginModal" tabindex="-1" aria-labelledby="pedidosLoginModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="pedidosLoginModalLabel">Login Impressão</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="pedidosLoginForm">
+                            <div class="mb-3">
+                                <label for="pedidosPassword" class="form-label">Senha de impressão</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="pedidosPassword" placeholder="Digite a senha" required>
+                                    <span class="input-group-text toggle-password">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" id="confirmPedidosLogin" class="btn btn-primary">Entrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Producao Login -->
+<div class="modal fade" id="producaoLoginModal" tabindex="-1" aria-labelledby="producaoLoginModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="producaoLoginModalLabel">Login Produção</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="producaoLoginForm">
+                    <div class="mb-3">
+                        <label for="producaoPassword" class="form-label">Senha de Produção</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="producaoPassword" placeholder="Digite a senha" required>
+                            <span class="input-group-text toggle-password">
+                                <i class="bi bi-eye-slash"></i>
+                            </span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="confirmProducaoLogin" class="btn btn-primary">Entrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+        <div class="avatar-container">
+            <div>
+                <div class="avatar consulta" id="consultaAvatar" title="Entrar como Consulta">
+                    <i class="bi bi-person"></i>
+                </div>
+                <div class="avatar-label">Consulta</div>
+            </div>
+              <div>
+                <div class="avatar conferente" id="eanAvatar" title="Entrar como EAN">
+                    <i class="bi bi-search"></i>
+                </div>
+                <div class="avatar-label">EAN</div>
+            </div>
+            <div>
+                <div class="avatar impressao" id="impressaoAvatar" data-bs-toggle="modal" data-bs-target="#impressaoLoginModal" title="Entrar como Impressão">
+            
+                    <img src="{{ url_for('static', filename='img/logo_imagem.png') }}" alt="img" style="width: 100%; height: 100%; object-fit: contain;">
+
+                </div>
+                <div class="avatar-label">Imagens</div>
+            </div>
+
+            <div>
+                <div class="avatar admin" id="adminAvatar" data-bs-toggle="modal" data-bs-target="#adminLoginModal" title="Entrar como Admin">
+                    <i class="bi bi-person-gear"></i>
+                </div>
+                <div class="avatar-label">Admin</div>
+            </div>
+            <div>
+
+                <div class="avatar pedidos" id="pedidosAvatar" data-bs-toggle="modal" data-bs-target="#pedidosLoginModal" title="Entrar como Pedidos">
+                <img src="{{ url_for('static', filename='img/logo_impressao.png') }}" alt="impressao" style="width: 100%; height: 100%; object-fit: contain;">
+
+                </div>
+                <div class="avatar-label">Impressão</div>
+            </div>
+
+            <div>
+    <div class="avatar producao" id="producaoAvatar" data-bs-toggle="modal" data-bs-target="#producaoLoginModal" title="Entrar como Produção">
+        <img src="{{ url_for('static', filename='img/logo_producao.png') }}" alt="Produção" style="width: 100%; height: 100%; object-fit: contain;">
+    </div>
+    <div class="avatar-label">Produção</div>
+</div>
+    
+        </div>
+        
+
+        <div id="notificationsContainer"></div>
+        
+        <footer class="footer">
+            ViaCores ERP - Versão 4.5 | Desenvolvido por ViaCores
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle password visibility
+        document.querySelectorAll('.toggle-password').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const input = this.previousElementSibling;
+                const icon = this.querySelector('i');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                }
+            });
+        });
+
+        // Notification function
+        function showNotification(text, type, container) {
+            console.log(`[Client] Notificação: ${text} (${type})`);
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                ${text}
+                <span class="close-btn">×</span>
+            `;
+            container.appendChild(notification);
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+            notification.querySelector('.close-btn').addEventListener('click', () => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            });
+        }
+
+        // Perform login
+        function performLogin(username, password) {
+            console.log(`[Client] Iniciando login: username=${username}, password=${password ? '[provided]' : 'null'}`);
+            const formData = new FormData();
+            formData.append('username', username);
+            if (password) {
+                formData.append('password', password);
+            }
+
+            fetch('/login', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                console.log(`[Client] Status da resposta: ${response.status} ${response.statusText}`);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`Erro HTTP: ${response.status} ${response.statusText} - ${text}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('[Client] Resposta do servidor:', data);
+                if (data.success && data.redirect) {
+                    showNotification(data.message || `Login bem-sucedido como ${username.charAt(0).toUpperCase() + username.slice(1)}!`, 'success', document.getElementById('notificationsContainer'));
+                    setTimeout(() => {
+                        window.location.assign(data.redirect);
+                    }, 1000);
+                } else {
+                    const errorMessage = username === 'consulta' || username === 'conferente'
+                        ? `Erro ao fazer login como ${username.charAt(0).toUpperCase() + username.slice(1)}. Contate o administrador do sistema.`
+                        : data.message || `Erro ao fazer login como ${username.charAt(0).toUpperCase() + username.slice(1)}.`;
+                    showNotification(errorMessage, 'error', document.getElementById('notificationsContainer'));
+                }
+            })
+            .catch(error => {
+                console.error('[Client] Erro ao fazer login:', error);
+                const errorMessage = username === 'consulta' || username === 'conferente'
+                    ? `Erro ao processar login como ${username.charAt(0).toUpperCase() + username.slice(1)}. Contate o administrador do sistema.`
+                    : `Erro ao processar login: ${error.message}`;
+                showNotification(errorMessage, 'error', document.getElementById('notificationsContainer'));
+            });
+        }
+
+        // Consulta Login (direto, sem senha)
+        document.getElementById('consultaAvatar').addEventListener('click', function() {
+            console.log('[Client] Avatar Consulta clicado');
+            performLogin('consulta', null);
+        });
+
+         document.getElementById('eanAvatar').addEventListener('click', function() {
+            console.log('[Client] Avatar EAN clicado');
+            performLogin('consulta_ean', null);
+        });
+        // Admin Login (com modal)
+        document.getElementById('confirmAdminLogin').addEventListener('click', function() {
+            const password = document.getElementById('adminPassword').value.trim();
+            console.log('[Client] Botão Entrar (Admin) clicado');
+            performAdminLogin(password);
+        });
+
+        // Impressao Login (com modal)
+        document.getElementById('confirmImpressaoLogin').addEventListener('click', function() {
+            const password = document.getElementById('impressaoPassword').value.trim();
+            console.log('[Client] Botão Entrar (Impressão) clicado');
+            performImpressaoLogin(password);
+        });
+
+        // Pedidos Login (com modal)
+        document.getElementById('confirmPedidosLogin').addEventListener('click', function() {
+            const password = document.getElementById('pedidosPassword').value.trim();
+            console.log('[Client] Botão Entrar (Pedidos) clicado');
+            performPedidosLogin(password);
+        });
+
+        // Producao Login (com modal)
+document.getElementById('confirmProducaoLogin').addEventListener('click', function() {
+    const password = document.getElementById('producaoPassword').value.trim();
+    console.log('[Client] Botão Entrar (Produção) clicado');
+    performProducaoLogin(password);
+});
+
+        // Admin Login on Enter key
+        document.getElementById('adminPassword').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const password = document.getElementById('adminPassword').value.trim();
+                console.log('[Client] Tecla Enter pressionada no campo de senha Admin');
+                performAdminLogin(password);
+            }
+        });
+
+        // Impressao Login on Enter key
+        document.getElementById('impressaoPassword').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const password = document.getElementById('impressaoPassword').value.trim();
+                console.log('[Client] Tecla Enter pressionada no campo de senha Impressão');
+                performImpressaoLogin(password);
+            }
+        });
+
+        // Pedidos Login on Enter key
+        document.getElementById('pedidosPassword').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const password = document.getElementById('pedidosPassword').value.trim();
+                console.log('[Client] Tecla Enter pressionada no campo de senha Pedidos');
+                performPedidosLogin(password);
+            }
+        });
+
+        // Producao Login on Enter key
+document.getElementById('producaoPassword').addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        const password = document.getElementById('producaoPassword').value.trim();
+        console.log('[Client] Tecla Enter pressionada no campo de senha Produção');
+        performProducaoLogin(password);
+    }
+});
+
+ function performAdminLogin(password) {
+        if (!password) {
+            showNotification('Por favor, insira a senha.', 'error', document.getElementById('notificationsContainer'));
+            document.getElementById('adminPassword').focus();
+            return;
+        }
+        performLogin('admin', password);
+    }
+
+
+function performProducaoLogin(password) {
+    if (!password) {
+        showNotification('Por favor, insira a senha.', 'error', document.getElementById('notificationsContainer'));
+        document.getElementById('producaoPassword').focus();
+        return;
+    }
+    performLogin('producao', password); // Sends username=producao
+}
+        function performImpressaoLogin(password) {
+            if (!password) {
+                showNotification('Por favor, insira a senha.', 'error', document.getElementById('notificationsContainer'));
+                document.getElementById('impressaoPassword').focus();
+                return;
+            }
+            performLogin('impressao', password);
+        }
+
+        function performPedidosLogin(password) {
+            if (!password) {
+                showNotification('Por favor, insira a senha.', 'error', document.getElementById('notificationsContainer'));
+                document.getElementById('pedidosPassword').focus();
+                return;
+            }
+            performLogin('pedidos', password);
+        }
+
+        function performProducaoLogin(password) {
+            if (!password) {
+                showNotification('Por favor, insira a senha.', 'error', document.getElementById('notificationsContainer'));
+                document.getElementById('producaoPassword').focus();
+                return;
+            }
+            performLogin('user', password);
+        }
+
+        // Clear password fields when modals are closed
+        document.getElementById('adminLoginModal').addEventListener('hidden.bs.modal', function() {
+            console.log('[Client] Modal Admin fechado, limpando campo de senha');
+            document.getElementById('adminPassword').value = '';
+        });
+
+        document.getElementById('impressaoLoginModal').addEventListener('hidden.bs.modal', function() {
+            console.log('[Client] Modal Impressão fechado, limpando campo de senha');
+            document.getElementById('impressaoPassword').value = '';
+        });
+
+        document.getElementById('pedidosLoginModal').addEventListener('hidden.bs.modal', function() {
+            console.log('[Client] Modal Pedidos fechado, limpando campo de senha');
+            document.getElementById('pedidosPassword').value = '';
+        });
+
+        // Clear password field when modal is closed
+document.getElementById('producaoLoginModal').addEventListener('hidden.bs.modal', function() {
+    console.log('[Client] Modal Produção fechado, limpando campo de senha');
+    document.getElementById('producaoPassword').value = '';
+});
+
+        // Focus on password fields when modals are shown
+        document.getElementById('adminLoginModal').addEventListener('shown.bs.modal', function() {
+            console.log('[Client] Modal Admin aberto, focando no campo de senha');
+            document.getElementById('adminPassword').focus();
+        });
+
+        document.getElementById('impressaoLoginModal').addEventListener('shown.bs.modal', function() {
+            console.log('[Client] Modal Impressão aberto, focando no campo de senha');
+            document.getElementById('impressaoPassword').focus();
+        });
+
+        document.getElementById('pedidosLoginModal').addEventListener('shown.bs.modal', function() {
+            console.log('[Client] Modal Pedidos aberto, focando no campo de senha');
+            document.getElementById('pedidosPassword').focus();
+        });
+
+        // Focus on password field when modal is shown
+document.getElementById('producaoLoginModal').addEventListener('shown.bs.modal', function() {
+    console.log('[Client] Modal Produção aberto, focando no campo de senha');
+    document.getElementById('producaoPassword').focus();
+});
+    </script>
+</body>
+</html>
+
+
+   

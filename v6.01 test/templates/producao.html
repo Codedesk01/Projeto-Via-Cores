@@ -1,0 +1,2922 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produção</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/Logo.png') }}" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(180deg, #f4f7fa 0%, #ebedf0 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            color: #2d3748;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 70px auto 20px;
+            padding: 0 10px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            padding: 1rem;
+        }
+
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #1a202c;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            color: #4a5568;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: #fff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .sku-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .sku-box {
+            flex: 0 0 calc(20% - 1rem);
+            border: 2px solid #007bff;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin: 0.5rem;
+            cursor: pointer;
+            background-color: #fff;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            min-height: 60px;
+        }
+
+        .sku-box:hover {
+            background-color: #e9f0ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+        }
+
+        .sku-box.clicked {
+            background-color: #3498db !important;
+            border: 3px solid #fff !important;
+            color: #fff !important;
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        .sku-box.motoboy {
+            background-color: #f4d03f !important;
+            color: #000 !important;
+            border-color: #fff !important;
+            box-shadow: 0 4px 8px rgba(255, 87, 51, 0.2);
+        }
+
+        .sku-box.motoboy.clicked {
+            background-color: #f4d03f !important;
+            border: 3px solid #fff !important;
+            color: #000 !important;
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(204, 0, 0, 0.3);
+        }
+
+        .sku-box.canceled {
+            background-color: #FF0000 !important;
+            color: #fff !important;
+            border-color: #fff !important;
+            box-shadow: 0 4px 8px rgba(255, 0, 0, 0.2);
+        }
+
+        .sku-box.canceled.clicked {
+            background-color: #CC0000 !important;
+            border: 3px solid #fff !important;
+            color: #fff !important;
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(204, 0, 0, 0.3);
+        }
+
+        .sku-content {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            padding-right: 2rem;
+        }
+
+        .sku-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 1.2rem;
+        }
+
+        .sku-checkbox {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            margin: 0;
+        }
+
+        .sku-image-container {
+            display: flex;
+            align-items: center;
+            margin-right: 1rem;
+        }
+
+        .sku-image, .image-placeholder {
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .sku-image:hover, .image-placeholder:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .sku-image {
+            object-fit: cover;
+            display: none;
+        }
+
+        .sku-image.loaded {
+            display: block;
+        }
+
+        .image-placeholder {
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .modal-full-image {
+            max-width: 90vw;
+            max-height: 80vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-dialog {
+            max-width: 95vw;
+            margin: 2.5rem auto;
+        }
+
+        .modal-body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+            padding: 32px;
+            background: #f9fafb;
+            border-radius: 12px;
+        }
+
+        .date-shipped {
+            font-size: 0.9rem;
+            color: #4a5568;
+            font-weight: 400;
+            white-space: nowrap;
+        }
+
+        #checkButton, #checkButtonShopee {
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            right: 1rem;
+            width: calc(100% - 2rem);
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            background: linear-gradient(90deg, #28a745, #218838);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.25s ease;
+            display: none;
+            z-index: 100;
+        }
+
+        #estoqueButton, #estoqueButtonShopee {
+            position: fixed;
+            top: 9rem;
+            right: 1rem;
+            width: calc(100% - 2rem);
+            max-width: 150px;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            background: linear-gradient(90deg, #17a2b8, #138496);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.25s ease;
+            display: none;
+            z-index: 100;
+        }
+
+        #checkButton:hover, #checkButtonShopee:hover {
+            background: linear-gradient(90deg, #218838, #1e7e34);
+            transform: translateY(-2px);
+        }
+
+        #estoqueButton:hover, #estoqueButtonShopee:hover {
+            background: linear-gradient(90deg, #138496, #117a8b);
+            transform: translateY(-2px);
+        }
+
+        #checkButton.visible, #checkButtonShopee.visible,
+        #estoqueButton.visible, #estoqueButtonShopee.visible {
+            display: inline-block;
+        }
+
+        .fixed-total {
+            position: fixed;
+            top: 0.5rem;
+            right: 1rem;
+            background: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 99;
+            text-align: right;
+        }
+
+        #totalSkuCount, #selectedCount, #totalSkuCountShopee, #selectedCountShopee {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        #totalSkuCount span, #selectedCount span, #totalSkuCountShopee span, #selectedCountShopee span {
+            color: #1a3c87;
+        }
+
+        .form-control {
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: border-color 0.2s ease;
+            font-size: 0.95rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        #processButton, #processButtonShopee {
+            background: linear-gradient(90deg, #28a745, #218838);
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        #processButton:hover, #processButtonShopee:hover {
+            background: linear-gradient(90deg, #218838, #1e7e34);
+            transform: translateY(-2px);
+        }
+
+        #processButton:disabled, #processButtonShopee:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+
+        #invalidOrdersList li, #invalidOrdersListShopee li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            background-color: #fef2f2;
+            color: #9b2c2c;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        #invalidOrdersList li.motoboy, #invalidOrdersListShopee li.motoboy {
+            background-color: #ff5733 !important;
+            color: #fff !important;
+            box-shadow: 0 4px 8px rgba(255, 87, 51, 0.2);
+        }
+
+        #invalidOrdersList li:hover, #invalidOrdersListShopee li:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .delete-btn {
+            cursor: pointer;
+            color: #dc3545;
+            font-size: 1.2rem;
+            margin-left: 1rem;
+            transition: color 0.2s ease;
+        }
+
+        .delete-btn:hover {
+            color: #b02a37;
+        }
+
+        #checkedOrdersTable, #checkedOrdersTableShopee {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #fff;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        #checkedOrdersTable th, #checkedOrdersTableShopee th {
+            background: #edf2ff;
+            color: #2d3748;
+            font-weight: 600;
+            padding: 1rem;
+            border: none;
+        }
+
+        #checkedOrdersTable td, #checkedOrdersTableShopee td {
+            padding: 1rem;
+            border: none;
+            border-top: 1px solid #e5e7eb;
+            color: #000000 !important;
+        }
+
+        #checkedOrdersTable tr.motoboy, #checkedOrdersTableShopee tr.motoboy {
+            color: #000000 !important;
+        }
+
+        #checkedOrdersTable tr.canceled td:nth-child(3), #checkedOrdersTableShopee tr.canceled td:nth-child(3) {
+            color: #000000 !important;
+        }
+
+        #checkedOrdersTable tr:nth-child(even), #checkedOrdersTableShopee tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        #checkedOrdersTable tr:hover, #checkedOrdersTableShopee tr:hover {
+            background-color: #e9f0ff;
+        }
+
+        #checkedOrdersTable tr.motoboy:hover, #checkedOrdersTableShopee tr.motoboy:hover {
+            background-color: #e6c02e !important;
+        }
+
+        .total-check {
+            background-color: #edf2ff;
+            font-weight: 600;
+            padding: 0.75rem;
+            border-radius: 0.5rem 0.5rem 0 0;
+            text-align: left;
+            color: #2d3748;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #007bff, #0056b3);
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #0056b3, #004085);
+            transform: translateY(-2px);
+        }
+
+        footer {
+            color: #6b7280;
+            font-size: 0.9rem;
+            padding: 20px 0;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .selected-skus-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        #selectedSkusText, #selectedSkusTextShopee {
+            flex-grow: 1;
+            height: 38px;
+            resize: none;
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            font-size: 0.95rem;
+            color: #2d3748;
+        }
+
+        #copySkusButton, #copySkusButtonShopee {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background: linear-gradient(90deg, #28a745, #218838);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #copySkusButton:hover, #copySkusButtonShopee:hover {
+            background: linear-gradient(90deg, #218838, #1e7e34);
+            transform: translateY(-2px);
+        }
+
+        .nav-tabs .nav-link {
+            color: #4a5568;
+            font-weight: 500;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: #fff;
+            color: #1a3c87;
+            border-bottom: 3px solid #1a3c87;
+        }
+
+        @media (max-width: 992px) {
+            .container {
+                max-width: 95vw;
+                padding: 0 16px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .sku-box {
+                flex: 0 0 calc(25% - 1rem);
+            }
+
+            .fixed-total {
+                right: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sku-box {
+                flex: 0 0 calc(33.333% - 1rem);
+            }
+
+            #checkButton, #checkButtonShopee, #estoqueButton, #estoqueButtonShopee {
+                max-width: 160px;
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+            }
+
+            .fixed-total {
+                right: 0.5rem;
+                top: 0.5rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                margin: 60px auto 20px;
+                padding: 0 10px;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .form-control {
+                font-size: 0.9rem;
+                padding: 0.4rem 0.6rem;
+            }
+
+            #processButton, #processButtonShopee {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+
+            .sku-box {
+                flex: 0 0 calc(50% - 1rem);
+            }
+
+            #checkButton, #checkButtonShopee, #estoqueButton, #estoqueButtonShopee {
+                max-width: 140px;
+                padding: 0.75rem 1.5rem;
+                font-size: 1rem;
+            }
+
+            .fixed-total {
+                padding: 0.4rem 0.8rem;
+                right: 0.5rem;
+                top: 0.5rem;
+            }
+
+            .total-check {
+                font-size: 0.9rem;
+                padding: 0.5rem;
+            }
+
+            .selected-skus-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            #copySkusButton, #copySkusButtonShopee {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sku-box {
+                flex: 0 0 calc(100% - 1rem);
+            }
+        }
+
+        #checkedOrdersTable, #checkedOrdersTableShopee {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        #notificationsContainer {
+            position: fixed;
+            top: 3rem;
+            right: 1rem;
+            z-index: 1001;
+            width: 300px;
+        }
+
+
+
+        .exit-button {
+        position: absolute;
+        align-items: center;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: 500;
+        color: #fff;
+        background-color: #dc3545;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        gap: 8px;
+        margin-top: 0px;
+    }
+    .exit-button:hover {
+        background-color: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    .exit-button:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    .exit-button i {
+        font-size: 18px;
+    }
+
+
+       /* Estilização do container de busca para alinhar com o design do modal */
+.search-container {
+    background: #f9fafb; /* Mesma cor de fundo do modal-body */
+    border-radius: 12px; /* Mesma borda arredondada do modal */
+    padding: 16px; /* Espaçamento interno similar ao modal */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); /* Mesma sombra do modal */
+    margin-bottom: 1rem; /* Espaçamento consistente */
+}
+
+/* Estilização do input de busca */
+.search-input {
+    border: 1px solid #d1d5db; /* Mesma borda do form-control */
+    border-radius: 0.5rem; /* Bordas arredondadas consistentes */
+    padding: 0.5rem 0.75rem; /* Mesmo padding do form-control */
+    font-size: 0.95rem; /* Mesmo tamanho de fonte */
+    background-color: #fff; /* Fundo branco para contraste */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease; /* Mesma transição do form-control */
+}
+
+.search-input:focus {
+    border-color: #007bff; /* Mesma cor de foco do form-control */
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* Mesmo efeito de foco */
+    outline: none; /* Remove outline padrão */
+}
+
+/* Responsividade para manter consistência com o layout do modal */
+@media (max-width: 992px) {
+    .search-container {
+        padding: 12px; /* Ajuste de padding para telas menores */
+    }
+}
+
+@media (max-width: 768px) {
+    .search-container {
+        padding: 10px; /* Ajuste para telas menores */
+    }
+    .search-input {
+        font-size: 0.9rem; /* Mesmo ajuste do form-control */
+        padding: 0.4rem 0.6rem; /* Mesmo ajuste do form-control */
+    }
+}
+
+@media (max-width: 576px) {
+    .search-container {
+        padding: 8px; /* Ajuste para telas muito pequenas */
+        margin-bottom: 0.75rem; /* Espaçamento reduzido */
+    }
+    .search-input {
+        font-size: 0.85rem; /* Ajuste para telas pequenas */
+    }
+}
+
+
+
+.info-section {
+    background-color: #f5f5f5;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+}
+
+.info-section h2 {
+    color: #333;
+    font-size: 1.5em;
+    margin-bottom: 15px;
+}
+
+.info-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-item label {
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.info-item input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+    background-color: #fff;
+    transition: border-color 0.3s;
+}
+
+.info-item input:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+.info-item input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.info-item span.info-value {
+    margin-top: 5px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.info-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.info-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s;
+}
+
+.info-actions button:first-child {
+    background-color: #28a745;
+    color: white;
+}
+
+.info-actions button:first-child:hover {
+    background-color: #218838;
+}
+
+.info-actions button:last-child {
+    background-color: #007bff;
+    color: white;
+}
+
+.info-actions button:last-child:hover {
+    background-color: #0056b3;
+}
+
+
+
+
+
+
+
+
+.info-section-shopee {
+    background-color: #f5f5f5;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+}
+
+.info-section-shopee h2 {
+    color: #333;
+    font-size: 1.5em;
+    margin-bottom: 15px;
+}
+
+.info-container-shopee {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12spx;
+}
+
+.info-item-shopee {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-item-shopee label {
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 5px;
+    font-size: 1em;
+}
+
+.info-item-shopee input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+    background-color: #fff;
+    transition: border-color 0.3s;
+    width: 200px;
+}
+
+.info-item-shopee input:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+.info-item-shopee input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.info-item-shopee span.info-value {
+    margin-top: 5px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.info-actions-shopee {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.info-actions-shopee button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s;
+    width: 100px;
+}
+
+.info-actions-shopee button:first-child {
+    background-color: #28a745;
+    color: white;
+}
+
+.info-actions-shopee button:first-child:hover {
+    background-color: #218838;
+}
+
+.info-actions-shopee button:last-child {
+    background-color: #007bff;
+    color: white;
+}
+
+.info-actions-shopee button:last-child:hover {
+    background-color: #0056b3;
+}
+
+
+
+
+
+
+
+/* Estilos para a seção da Shopee */
+    .shopee-card {
+        background: #fff;
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+        padding: 1rem;
+    }
+
+    .shopee-card h2 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        color: #2d3748;
+    }
+
+    .shopee-card h3 {
+        font-size: 1.25rem;
+        font-weight: 500;
+        margin-bottom: 0.75rem;
+        color: #4a5568;
+    }
+
+    /* Formulário de processar pedidos Shopee */
+    #process-orders-shopee-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    #process-orders-shopee-form textarea {
+        border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.2s ease;
+    font-size: 0.9rem; /* Reduz o tamanho da fonte */
+    padding: 0.5rem; /* Reduz o padding */
+    resize: vertical;
+    height: 150px; /* Reduz a altura do textarea */
+    }
+
+    #process-orders-shopee-form textarea:focus {
+        border-color: #ff6200;
+        box-shadow: 0 0 0 0.2rem rgba(255, 98, 0, 0.25);
+    }
+
+    #process-orders-shopee-form button {
+        background: linear-gradient(90deg, #ff6200, #e55b00);
+        border: none;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        color: #fff;
+        transition: all 0.2s ease;
+        align-self: flex-start;
+    }
+
+    #process-orders-shopee-form button:hover {
+        background: linear-gradient(90deg, #e55b00, #d35400);
+        transform: translateY(-2px);
+    }
+
+    #process-orders-shopee-form button:disabled {
+        background: #d1d5db;
+        cursor: not-allowed;
+    }
+
+    /* Pedidos Processados Shopee */
+    .shopee-orders-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .shopee-order-section {
+        background: #fff;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .shopee-order-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+   /* Estilos para a seção da Shopee */
+.shopee-order-item {
+    flex: 0 0 calc(20% - 1rem); /* 4 itens por linha */
+    border: 2px solid #ff6200;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin: 0.5rem;
+    cursor: pointer;
+    background-color: #fff;
+    font-size: 1.1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    min-height: 60px;
+}
+
+/* Mantém estilos de hover e seleção */
+.shopee-order-item:hover {
+    background-color: #fff5f0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 98, 0, 0.2);
+}
+
+.shopee-order-item.selected {
+    background-color: #ff6200;
+    border: 3px solid #fff;
+    color: #fff;
+    transform: scale(1.1);
+    box-shadow: 0 6px 12px rgba(255, 98, 0, 0.3);
+}
+
+/* Ajustes para elementos internos */
+.shopee-order-details {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    padding-right: 2rem;
+}
+
+.shopee-sku-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 1.0rem;
+}
+
+.shopee-sku-checkbox {
+    position: absolute;
+    right: 0.15rem;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0;
+    width: 10px;
+    height: 10px;
+}
+
+.shopee-order-image {
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+}
+
+.shopee-order-image img,
+.shopee-order-image .image-placeholder {
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.shopee-order-image img:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.shopee-order-image .image-placeholder {
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+    /* Resumo de SKUs */
+    .shopee-summary {
+        position: fixed;
+        top: 0.5rem;
+        right: 1rem;
+        background: #fff;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 99;
+        text-align: right;
+    }
+
+    .shopee-summary p {
+        margin: 0;
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .shopee-summary span {
+        color: #ff6200;
+    }
+
+    /* Botões de ação Shopee */
+    #checkButtonShopee, #estoqueButtonShopee {
+        position: fixed;
+        bottom: 1rem;
+        width: calc(50% - 1.5rem);
+        padding: 0.75rem 2rem;
+        border-radius: 0.5rem;
+        background: linear-gradient(90deg, #ff6200, #e55b00);
+        border: none;
+        color: #fff;
+        font-weight: 600;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: all 0.25s ease;
+        display: none;
+        z-index: 100;
+    }
+
+    #checkButtonShopee {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100% !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 1rem !important;
+    font-size: 1.2rem !important;
+    z-index: 1050;
+}
+
+     #estoqueButtonShopee {
+    padding: 0.4rem 1rem !important;
+    font-size: 0.95rem !important;
+    max-height: 55px; /* altura menor */
+    right: 1rem;
+}
+
+
+    #checkButtonShopee:hover, #estoqueButtonShopee:hover {
+        background: linear-gradient(90deg, #e55b00, #d35400);
+        transform: translateY(-2px);
+    }
+
+    /* Botão Copiar SKUs */
+    #copy-skus-shopee-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        background: linear-gradient(90deg, #ff6200, #e55b00);
+        border: none;
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.95rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transition: all 0.25s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    #copy-skus-shopee-btn:hover {
+        background: linear-gradient(90deg, #e55b00, #d35400);
+        transform: translateY(-2px);
+    }
+
+    /* Pedidos Não Processados Shopee */
+    .shopee-invalid-orders {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .shopee-invalid-order-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        background-color: #fef2f2;
+        color: #9b2c2c;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+    }
+
+    .shopee-invalid-order-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .shopee-invalid-order-item button {
+        background: #dc3545;
+        border: none;
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+        color: #fff;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .shopee-invalid-order-item button:hover {
+        background: #c82333;
+        transform: translateY(-2px);
+    }
+
+   /* Responsividade */
+@media (max-width: 992px) {
+    .shopee-order-item {
+        flex: 0 0 calc(25% - 1rem); /* 4 itens por linha */
+    }
+}
+
+    @media (max-width: 768px) {
+    .shopee-order-item {
+        flex: 0 0 calc(25% - 1rem); /* 4 itens por linha */
+    }
+
+
+        #checkButtonShopee, #estoqueButtonShopee {
+            max-width: 160px;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+        }
+
+        .shopee-summary {
+            right: 0.5rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+    .shopee-order-item {
+        flex: 0 0 calc(25% - 1rem); /* 4 itens por linha */
+    }
+
+    @media (max-width: 480px) {
+    .shopee-order-item {
+        flex: 0 0 calc(25% - 1rem); /* 4 itens por linha */
+    }
+
+}
+
+
+        #process-orders-shopee-form textarea {
+        font-size: 1.0rem;
+        padding: 1.0rem;
+        height: 100px; /* Altura ainda menor em telas pequenas */
+        }
+
+        #process-orders-shopee-form button {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+
+        #checkButtonShopee, #estoqueButtonShopee {
+            max-width: 140px;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+        }
+
+        .shopee-summary {
+            padding: 0.4rem 0.8rem;
+            right: 0.5rem;
+        }
+    }
+
+    
+   /* Estilos para o botão de Cancelar */
+#cancelButton {
+    position: fixed;
+    top: 19rem; /* Posição abaixo do botão Estoque */
+    right: 1rem;
+    width: calc(100% - 2rem);
+    max-width: 150px;
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    background: linear-gradient(90deg, #dc3545, #c82333); /* Cor vermelha */
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.25s ease;
+    display: none; /* Começa escondido */
+    z-index: 100;
+}
+
+#cancelButton:hover {
+    background: linear-gradient(90deg, #c82333, #b91c1c);
+    transform: translateY(-2px);
+}
+
+#cancelButton.visible {
+    display: inline-block; /* Torna visível com a classe */
+}
+
+
+    </style>
+</head>
+<body>
+    <div id="notificationsContainer"></div>
+
+    <div class="container mt-4">
+         <a class="nav-link exit-button" href="{{ url_for('logout') }}" title="Sair">
+    <i class="bi bi-box-arrow-right"></i>
+    <span>Sair</span></a>
+
+        <h1>Produção</h1>
+
+        <ul class="nav nav-tabs mb-4" id="orderTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+               
+                <button class="nav-link active" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab" aria-controls="orders" aria-selected="true">
+                    <img src="{{ url_for('static', filename='img/mercado-livre.png') }}" alt="Pedidos Mercado" style="height: 60px;">
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+        <button class="nav-link" id="shopee-tab" data-bs-toggle="tab" data-bs-target="#shopee" type="button" role="tab" aria-controls="shopee" aria-selected="false">
+            <img src="{{ url_for('static', filename='img/shopee.png') }}" alt="Pedidos Shopee" style="height: 60px;">
+        </button>
+    </li>
+        </ul>
+
+        <div class="tab-content" id="orderTabsContent">
+            <div class="tab-pane fade show active" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+                <div class="card">
+                    <h2>Processar Pedidos</h2>
+                    <form id="processForm">
+                        <textarea id="orderText" name="text" rows="6" class="form-control" placeholder="Cole o texto aqui..."></textarea>
+                        <button type="submit" id="processButton" class="btn btn-success mt-2">Processar</button>
+                    </form>
+                    <p id="errorMessage" class="error-message"></p>
+                </div>
+
+                <div class="card">
+    <h2>Pedidos Processados</h2>
+    <div class="fixed-total">
+        <p id="totalSkuCount">Total de SKUs: <span>0</span></p>
+        <p id="selectedCount">Selecionados: <span>0</span></p>
+    </div>
+    
+    <div>
+        {% for section, section_orders in sections.items() %}
+        <div class="section">
+            <h3>{{ section }}</h3>
+            <div id="{{ section|lower }}-section" class="sku-container">
+                {% set day_names = ['segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado', 'domingo'] %}
+                {% set hoje_orders = section_orders | selectattr('display_date', 'eq', 'hoje') | list %}
+                {% set amanha_orders = section_orders | selectattr('display_date', 'eq', 'Amanhã') | list %}
+                {% set date_orders = section_orders | selectattr('display_date', 'ne', 'hoje') | selectattr('display_date', 'ne', 'Amanhã') | rejectattr('display_date', 'in', day_names) | list %}
+                {% set sorted_hoje_orders = hoje_orders | sort(attribute='sku') %}
+                {% set sorted_amanha_orders = amanha_orders | sort(attribute='sku') %}
+                {% set sorted_date_orders = date_orders | sort(attribute='display_date', reverse=False) %}
+                {% for order in sorted_hoje_orders %}
+                    <span class="sku-box {{ 'motoboy' if order.status == 'motoboy' }} {{ 'canceled' if order.status == 'cancelada' }}" data-sku="{{ order.sku }}" data-order-id="{{ order.id }}" data-section="{{ section }}" data-unique-id="sku-{{ order.sku }}-{{ loop.index }}">
+                        <div class="sku-image-container">
+                            <img src="/get_apr_image/{{ order.sku }}?t={{ 'timestamp' }}" class="sku-image" alt="Imagem de {{ order.sku }}" data-sku="{{ order.sku }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                            <div class="image-placeholder" data-sku="{{ order.sku }}">Sem Imagem</div>
+                        </div>
+                        <div class="sku-content">
+                            <div class="sku-text" style="text-align: center;">{{ order.sku }}</div>
+                            <div class="date-shipped">{{ order.display_date }}</div>
+                        </div>
+                        <input type="checkbox" class="sku-checkbox" data-sku="{{ order.sku }}" data-order-id="{{ order.id }}" id="sku-{{ order.sku }}-{{ loop.index }}">
+                    </span>
+                {% endfor %}
+                {% for order in sorted_amanha_orders %}
+                    <span class="sku-box {{ 'motoboy' if order.status == 'motoboy' }} {{ 'canceled' if order.status == 'cancelada' }}" data-sku="{{ order.sku }}" data-order-id="{{ order.id }}" data-section="{{ section }}" data-unique-id="sku-{{ order.sku }}-{{ loop.index }}">
+                        <div class="sku-image-container">
+                            <img src="/get_apr_image/{{ order.sku }}?t={{ 'timestamp' }}" class="sku-image" alt="Imagem de {{ order.sku }}" data-sku="{{ order.sku }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                            <div class="image-placeholder" data-sku="{{ order.sku }}">Sem Imagem</div>
+                        </div>
+                        <div class="sku-content">
+                            <div class="sku-text" style="text-align: center;">{{ order.sku }}</div>
+                            <div class="date-shipped">{{ order.display_date }}</div>
+                        </div>
+                        <input type="checkbox" class="sku-checkbox" data-sku="{{ order.sku }}" data-order-id="{{ order.id }}" id="sku-{{ order.sku }}-{{ loop.index }}">
+                    </span>
+                {% endfor %}
+                {% for order in sorted_date_orders %}
+                    <span class="sku-box {{ 'motoboy' if order.status == 'motoboy' }} {{ 'canceled' if order.status == 'cancelada' }}" data-sku="{{ order.sku }}" data-order-id="{{ order.id }}" data-section="{{ section }}" data-unique-id="sku-{{ order.sku }}-{{ loop.index }}">
+                        <div class="sku-image-container">
+                            <img src="/get_apr_image/{{ order.sku }}?t={{ 'timestamp' }}" class="sku-image" alt="Imagem de {{ order.sku }}" data-sku="{{ order.sku }}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                            <div class="image-placeholder" data-sku="{{ order.sku }}">Sem Imagem</div>
+                        </div>
+                        <div class="sku-content">
+                            <div class="sku-text" style="text-align: center;">{{ order.sku }}</div>
+                            <div class="date-shipped">{{ order.display_date }}</div>
+                        </div>
+                        <input type="checkbox" class="sku-checkbox" data-sku="{{ order.sku }}" data-order-id="{{ order.id }}" id="sku-{{ order.sku }}-{{ loop.index }}">
+                    </span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="selected-skus-container">
+        <textarea id="selectedSkusText" readonly placeholder="SKUs selecionados aparecerão aqui (ex.: sku,sku,sku)"></textarea>
+        <button id="copySkusButton" class="btn btn-success"><i class="bi bi-clipboard"></i> Copiar</button>
+    </div>
+</div>
+
+                <div class="info-section">
+    <h2>Informações</h2>
+    <form id="infoForm">
+        <div class="info-container">
+            <div class="info-item">
+                <label for="coleta_mercado">COLETA ML</label>
+                <input type="number" id="coleta_mercado" name="coleta_mercado" value="{{ info_data.get('coleta_mercado', '') }}" disabled>
+            </div>
+            <div class="info-item">
+                <label for="lona_mercado">LONA MERCADO</label>
+                <input type="number" id="lona_mercado" name="lona_mercado" value="{{ info_data.get('lona_mercado', '') }}" disabled>
+            </div>
+            <div class="info-item">
+                <label for="coleta_flex">COLETA FLEX</label>
+                <input type="number" id="coleta_flex" name="coleta_flex" value="{{ info_data.get('coleta_flex', '') }}" disabled>
+            </div>
+            <div class="info-item">
+                <label for="lona_flex">LONA FLEX</label>
+                <input type="number" id="lona_flex" name="lona_flex" value="{{ info_data.get('lona_flex', '') }}" disabled>
+            </div>
+            <div class="info-item">
+                <label for="loja_1">VIA.CORES</label>
+                <input type="text" id="loja_1" name="loja_1" value="{{ info_data.get('loja_1', '') }}" disabled>
+            </div>
+            <div class="info-item">
+                <label for="loja_2">VIA FAZ</label>
+                <input type="text" id="loja_2" name="loja_2" value="{{ info_data.get('loja_2', '') }}" disabled>
+            </div>
+            <div class="info-item">
+                <label for="loja_3">PADRAO COR</label>
+                <input type="text" id="loja_3" name="loja_3" value="{{ info_data.get('loja_3', '') }}" disabled>
+            </div>
+        </div>
+        <div class="info-actions">
+            <button type="button" onclick="unlockInfoFields()">Desbloq.</button>
+            <button type="submit">Salvar</button>
+        </div>
+    </form>
+</div>
+
+                <div class="card">
+                    <h2>Pedidos Não Processados</h2>
+                    <ul id="invalidOrdersList" class="list-unstyled">
+                        {% for order in invalid_no_sku_ids %}
+                            <li data-order-id="{{ order.order_id | default('Desconhecido') }}" class="{{ 'motoboy' if order.status == 'motoboy' }} {{ 'canceled' if order.status == 'cancelada' }}">
+                                {{ order.order_id | default('Desconhecido') }}
+                                {% if order.order_id and order.order_id != 'N/A' %}
+                                    <span class="delete-btn"><i class="bi bi-trash"></i></span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                    <!-- Campo de busca por SKU -->
+                        <div class="mb-3 search-container">
+    <input type="text" id="search-input" class="form-control search-input" placeholder="Buscar no histórico por SKU (ex: PCRV029)">
+</div>
+
+<div class="card">
+                    <h2>Histórico de Pedidos Checkados</h2>
+                    <button id="historyButton" class="btn btn-primary mb-3">Mostrar Histórico</button>
+                    <div class="total-check" id="totalCheck">TOTAL CHECK: <span>0</span></div>
+                    <table id="checkedOrdersTable" class="table">
+    <thead>
+        <tr>
+            <th>Pedido</th>
+            <th>SKU</th>
+            <th>Status</th>
+            <th>Data Check</th>
+            <th>Data de Envio</th>
+            <th>Produção</th>
+            <th>Ação</th>
+        </tr>
+    </thead>
+    <tbody id="checkedOrdersBody"></tbody>
+</table>
+                </div>
+                <!-- Image Modal -->
+                <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="imageModalLabel">Imagem do SKU</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <img id="modalImage" src="" alt="Imagem do SKU" class="modal-full-image" style="display: none;">
+                                <div id="modalImagePlaceholder" class="image-placeholder" style="width: 100%; height: 200px; line-height: 200px; font-size: 1rem;">Imagem não disponível</div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+    
+
+    <div class="container mt-4">
+<!-- Aba Shopee -->
+ <div class="tab-pane fade" id="shopee" role="tabpanel" aria-labelledby="shopee-tab">
+    <!-- Processar Pedidos Shopee -->
+    <section class="shopee-card">
+        <h2>Processar Pedidos Shopee</h2>
+        <form id="process-orders-shopee-form" method="POST" action="{{ url_for('process_orders_shopee_producao') }}">
+            <textarea name="orders" placeholder="Cole o texto dos pedidos Shopee aqui" rows="10" cols="50" required></textarea>
+            <button type="submit">Processar Pedidos Shopee</button>
+        </form>
+    </section>
+<!-- Pedidos Processados Shopee -->
+<section class="shopee-card">
+    <h2>Pedidos Processados Shopee</h2>
+    <div class="shopee-summary">
+        <p>Total de SKUs: <span id="total-skus-shopee">0</span></p>
+        <p>Selecionados: <span id="selected-skus-shopee">0</span></p>
+    </div>
+    <div class="shopee-orders-container" id="shopee-orders-container">
+        {% for section, section_orders in shopee_sections.items() %}
+        <div class="shopee-order-section">
+            <h3>{{ section }}</h3>
+            <div class="shopee-order-list">
+                {% for order in section_orders | sort(attribute='sku') %}
+                <div class="shopee-order-item" data-order-id="{{ order.id }}" data-sku="{{ order.sku }}">
+                    <div class="shopee-order-image">
+                        {% if order.sku %}
+                        <img src="/get_apr_image/{{ order.sku }}?t={{ 'timestamp' }}"
+                             class="sku-image"
+                             alt="Imagem de {{ order.sku }}"
+                             data-sku="{{ order.sku }}"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <div class="image-placeholder" data-sku="{{ order.sku }}">Sem Imagem</div>
+                        {% else %}
+                        <div class="image-placeholder" data-sku="{{ order.sku }}">Sem Imagem</div>
+                        {% endif %}
+                    </div>
+                    <div class="shopee-order-details">
+                        <span class="shopee-sku-text">{{ order.sku }}</span>
+                    </div>
+                    <input type="checkbox" class="shopee-sku-checkbox" data-sku="{{ order.sku }}" data-order-id="{{ order.id }}">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <button id="copy-skus-shopee-btn" class="btn btn-block btn-lg" onclick="copySelectedSkusShopee()">Copiar SKUs</button>
+</section>
+
+<!-- Modal para Imagem Shopee -->
+<div class="modal fade" id="imageModalShopee" tabindex="-1" aria-labelledby="imageModalShopeeLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalShopeeLabel">Imagem do SKU</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <img id="modalImageShopee" src="" alt="Imagem do SKU" class="modal-full-image" style="display: none;">
+                <div id="modalImagePlaceholderShopee" class="image-placeholder" style="width: 100%; height: 200px; line-height: 200px; font-size: 1rem;">Imagem não disponível</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+   <!-- Pedidos Não Processados Shopee -->
+<!-- Pedidos Não Processados Shopee 
+<section class="shopee-card">
+    <h2>Pedidos Não Processados Shopee</h2>
+    <div class="shopee-orders-container" id="shopee-invalid-orders-container">
+        {% for order in invalid_no_sku_ids_shopee %}
+        <div class="shopee-order-item invalid-order" data-order-id="{{ order.order_id }}">
+            <div class="shopee-order-details">
+                <span class="shopee-order-id">{{ order.order_id | default('Desconhecido') }}</span>
+                <span class="shopee-error">{{ order.error | default('Motivo não especificado') }}</span>
+            </div>
+            {% if order.order_id and order.order_id != 'N/A' %}
+            <button class="btn btn-danger btn-sm delete-invalid-shopee" data-order-id="{{ order.order_id }}">Deletar</button>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</section>
+-->
+<!-- info shopee-->
+ 
+<div class="info-section-shopee">
+    <h2>Informações Shopee</h2>
+    <form id="infoFormShopee" method="POST" action="{{ url_for('save_info_shopee') }}">
+        <div class="info-container-shopee">
+            <div class="info-item-shopee">
+                <label for="coleta_shopee">SHOPEE TOTAL</label>
+                <input type="number" id="coleta_shopee" name="coleta_shopee" value="{{ info_data.get('coleta_shopee', '') }}" disabled>
+            </div>
+        </div>
+        <div class="info-actions-shopee">
+            <button type="button" onclick="unlockInfoFieldsShopee()">Desbloq.</button>
+            <button type="submit">Salvar</button>
+        </div>
+    </form>
+</div>
+
+    <!-- Botão para mostrar histórico Shopee -->
+    <div class="card">
+    <h2>Histórico de Pedidos Checkados Shopee</h2>
+    <!-- Campo de busca -->
+    <div class="mb-3 search-container">
+        <input type="text" id="search-input-shopee" class="form-control search-input" placeholder="Buscar no histórico por SKU (ex: PCRV029)">
+    </div>
+    <button id="historyButtonShopee" class="btn btn-primary mb-3">Mostrar Histórico Shopee</button>
+    <div class="total-check" id="totalCheckShopee">TOTAL CHECK: <span>0</span></div>
+    <table id="checkedOrdersTableShopee" class="table" style="display: none;">
+        <thead>
+            <tr>
+                <th>Pedido</th>
+                <th>SKU</th>
+                <th>Status</th>
+                <th>Data Check</th>
+                <th>Data de Envio</th>
+            </tr>
+        </thead>
+        <tbody id="checkedOrdersBodyShopee"></tbody>
+    </table>
+</div>
+
+
+    <!-- Botões de Ação Shopee -->
+    <section class="shopee-card actions">
+        <button id="checkButtonShopee" onclick="checkOrdersShopee('check')">Check Shopee</button>
+        <button id="estoqueButtonShopee" onclick="checkOrdersShopee('estoque')">Estoque Shopee</button>
+    </section>
+</div>
+
+        <!-- Botões de Ação -->
+    <button id="checkButton" class="btn btn-success">Check</button>
+    <button id="estoqueButton" class="btn btn-info">Estoque</button>
+    <button id="cancelButton" class="btn btn-danger">Cancelado</button>
+
+    </div>
+
+    <footer>
+        <p>ViaCores ERP - Versão 4.5 | Desenvolvido por ViaCores</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script>
+
+
+function parseDateOrDay(dateShipped) {
+    // Retorna diretamente o valor recebido do servidor, que já está formatado
+    return dateShipped || 'hoje';
+}
+
+
+        // Função para exibir modal de imagem (Mercado Livre e Shopee)
+function showImageModal(sku) {
+    console.log(`[Client] Abrindo modal para SKU: ${sku}`);
+    const modalEl = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    const modalPlaceholder = document.getElementById('modalImagePlaceholder');
+    const modalTitle = document.getElementById('imageModalLabel');
+
+    if (!modalEl || !modalImage || !modalPlaceholder || !modalTitle) {
+        console.error('[Client] Elementos do modal não encontrados.');
+        return;
+    }
+
+    modalTitle.textContent = `Imagem do SKU: ${sku}`;
+    modalImage.src = `/get_apr_image/${encodeURIComponent(sku)}?t=${Date.now()}`;
+    modalImage.style.display = 'none';
+    modalPlaceholder.style.display = 'flex';
+
+    modalImage.onload = function () {
+        console.log(`[Client] Imagem carregada para SKU: ${sku}`);
+        modalImage.style.display = 'block';
+        modalPlaceholder.style.display = 'none';
+    };
+
+    modalImage.onerror = function () {
+        console.log(`[Client] Erro ao carregar imagem para SKU: ${sku}`);
+        modalImage.style.display = 'none';
+        modalPlaceholder.style.display = 'flex';
+    };
+
+    // Exibe o modal de forma segura
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+
+    // Limpa imagem ao fechar para evitar tela preta
+    modalEl.addEventListener('hidden.bs.modal', function cleanup() {
+        modalImage.src = '';
+        modalImage.style.display = 'none';
+        modalPlaceholder.style.display = 'flex';
+        modalEl.removeEventListener('hidden.bs.modal', cleanup);
+    });
+}
+
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[Client] producao.html carregado');
+
+            // Elements
+            const processButton = document.getElementById('processButton');
+            const processForm = document.getElementById('processForm');
+            const checkButton = document.getElementById('checkButton');
+            const estoqueButton = document.getElementById('estoqueButton');
+            const historyButton = document.getElementById('historyButton');
+            const checkedOrdersTable = document.getElementById('checkedOrdersTable');
+            const checkedOrdersBody = document.getElementById('checkedOrdersBody');
+            const totalCheck = document.getElementById('totalCheck');
+            const totalSkuCount = document.getElementById('totalSkuCount').querySelector('span');
+            const selectedCount = document.getElementById('selectedCount').querySelector('span');
+            const selectedSkusText = document.getElementById('selectedSkusText');
+            const copySkusButton = document.getElementById('copySkusButton');
+            const ordersTab = document.getElementById('orders-tab');
+            const invalidOrdersList = document.getElementById('invalidOrdersList');
+            const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
+            const savedTabId = localStorage.getItem('activeTabId');
+            
+           const cancelButton = document.getElementById('cancelButton');
+    if (cancelButton) {
+        cancelButton.addEventListener('click', cancelSelectedOrders);
+    }
+
+            // Corrigir clique nas imagens da Shopee para abrir modal sem travar tela
+document.querySelectorAll('#shopee .shopee-order-item').forEach(item => {
+    const image = item.querySelector('.sku-image');
+    const placeholder = item.querySelector('.image-placeholder');
+    const sku = item.getAttribute('data-sku');
+
+    if (image) {
+        image.addEventListener('click', e => {
+            e.stopPropagation();
+            if (sku) showImageModalShopee(sku);
+        });
+    }
+
+    if (placeholder) {
+        placeholder.addEventListener('click', e => {
+            e.stopPropagation();
+            if (sku) showImageModalShopee(sku);
+        });
+    }
+
+    // Restaura a aba ativa
+    if (savedTabId) {
+        const savedTab = document.getElementById(savedTabId);
+        if (savedTab) {
+            new bootstrap.Tab(savedTab).show();
+        }
+    }
+
+    // Salva a aba ativa quando ela muda
+    tabButtons.forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function (e) {
+            localStorage.setItem('activeTabId', e.target.id);
+        });
+    });
+
+
+});
+
+// Função para exibir modal de imagem Shopee
+function showImageModalShopee(sku) {
+    const modalEl = document.getElementById('imageModalShopee');
+    const modalImage = document.getElementById('modalImageShopee');
+    const modalPlaceholder = document.getElementById('modalImagePlaceholderShopee');
+    const modalTitle = document.getElementById('imageModalShopeeLabel');
+
+    modalTitle.textContent = `Imagem do SKU: ${sku}`;
+    modalImage.src = `/get_apr_image/${encodeURIComponent(sku)}?t=${Date.now()}`;
+    modalImage.style.display = 'none';
+    modalPlaceholder.style.display = 'flex';
+
+    modalImage.onload = function () {
+        modalImage.style.display = 'block';
+        modalPlaceholder.style.display = 'none';
+    };
+
+    modalImage.onerror = function () {
+        modalImage.style.display = 'none';
+        modalPlaceholder.style.display = 'flex';
+    };
+
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+
+    modalEl.addEventListener('hidden.bs.modal', function cleanup() {
+        modalImage.src = '';
+        modalImage.style.display = 'none';
+        modalPlaceholder.style.display = 'flex';
+        modalEl.removeEventListener('hidden.bs.modal', cleanup);
+    });
+}
+
+
+
+
+
+
+
+
+            // Notification Function
+            function showNotification(message, type = 'info') {
+                const notificationsContainer = document.getElementById('notificationsContainer');
+                const notification = document.createElement('div');
+                notification.className = `alert alert-${type} alert-dismissible fade show`;
+                notification.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                notificationsContainer.appendChild(notification);
+                setTimeout(() => notification.remove(), 5000);
+            }
+
+            // SKU Selection and Counters
+            // SKU Selection and Counters
+let totalSkus = 0;
+let selectedSkus = [];
+
+// Modifique a função updateCounters para incluir o novo botão
+function updateCounters() {
+    totalSkus = document.querySelectorAll('#orders .sku-box').length;
+    totalSkuCount.textContent = totalSkus;
+    selectedCount.textContent = selectedSkus.length;
+    selectedSkusText.value = selectedSkus.map(item => item.sku).join(',');
+    
+    const hasSelection = selectedSkus.length > 0;
+    checkButton.classList.toggle('visible', hasSelection);
+    estoqueButton.classList.toggle('visible', hasSelection);
+    
+    // Adicione esta linha para controlar o botão de cancelar
+    document.getElementById('cancelButton').classList.toggle('visible', hasSelection);
+}
+
+function toggleSkuSelection(skuBox, checkbox) {
+    const sku = skuBox.dataset.sku;
+    const uniqueId = skuBox.dataset.uniqueId;
+    const isChecked = checkbox.checked;
+
+    if (isChecked) {
+        skuBox.classList.add('clicked');
+        if (!selectedSkus.some(item => item.uniqueId === uniqueId)) {
+            selectedSkus.push({ sku, uniqueId });
+        }
+    } else {
+        skuBox.classList.remove('clicked');
+        selectedSkus = selectedSkus.filter(item => item.uniqueId !== uniqueId);
+    }
+    updateCounters();
+}
+
+document.querySelectorAll('.sku-box').forEach(skuBox => {
+    const checkbox = skuBox.querySelector('.sku-checkbox');
+    skuBox.addEventListener('click', function(e) {
+        if (e.target !== checkbox) {
+            checkbox.checked = !checkbox.checked;
+            toggleSkuSelection(skuBox, checkbox);
+        }
+    });
+    checkbox.addEventListener('change', function() {
+        toggleSkuSelection(skuBox, checkbox);
+    });
+    // Image event listeners
+    const image = skuBox.querySelector('.sku-image');
+    const placeholder = skuBox.querySelector('.image-placeholder');
+    if (image) {
+        image.addEventListener('load', function() {
+            this.classList.add('loaded');
+            this.nextElementSibling.style.display = 'none';
+        });
+        image.addEventListener('error', function() {
+            this.style.display = 'none';
+            this.nextElementSibling.style.display = 'flex';
+        });
+        if (image.complete) {
+            if (image.naturalWidth > 0) {
+                image.dispatchEvent(new Event('load'));
+            } else {
+                image.dispatchEvent(new Event('error'));
+            }
+        }
+    }
+    if (placeholder) {
+        placeholder.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const sku = this.getAttribute('data-sku');
+            showImageModal(sku);
+        });
+    }
+    if (image) {
+        image.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const sku = this.getAttribute('data-sku');
+            showImageModal(sku);
+        });
+    }
+});
+
+// Copy SKUs
+copySkusButton.addEventListener('click', function() {
+    if (selectedSkus.length === 0) {
+        showNotification('Nenhum SKU selecionado para copiar.', 'warning');
+        return;
+    }
+    selectedSkusText.select();
+    try {
+        document.execCommand('copy');
+        showNotification('SKUs copiados com sucesso!', 'success');
+    } catch (err) {
+        showNotification('Erro ao copiar SKUs.', 'danger');
+        console.error('[Client] Erro ao copiar:', err);
+    }
+});
+
+
+
+
+            // Process Orders
+            processForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const text = document.getElementById('orderText').value.trim();
+                if (!text) {
+                    showNotification('Por favor, insira o texto dos pedidos.', 'warning');
+                    return;
+                }
+                console.log('[Client] Botão Processar clicado');
+                processButton.disabled = true;
+                fetch('/process_orders_ml_producao', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('[Client] Resposta do processamento:', data);
+                    if (data.success) {
+                        showNotification(data.message || 'Pedidos processados com sucesso!', 'success');
+                    } else {
+                        showNotification(data.message || 'Erro ao processar pedidos.', 'danger');
+                    }
+                    console.log('[Client] Pedidos processados:', data.orders || []);
+                    console.log('[Client] Pedidos inválidos:', data.invalid_orders || []);
+                })
+                .catch(error => {
+                    console.error('[Client] Erro ao processar pedidos:', error);
+                    showNotification('Erro ao processar pedidos: ' + error.message, 'danger');
+                })
+                .finally(() => {
+                    processButton.disabled = false;
+                    location.reload();
+                });
+            });
+
+            // Delete Invalid Order
+            function deleteInvalidOrder(orderId, listItem) {
+                console.log('[Client] Botão Deletar clicado para Order_ID:', orderId);
+                fetch('/delete_invalid_order_producao', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ order_id: orderId })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('[Client] Resposta do delete:', data);
+                    if (data.success) {
+                        showNotification(data.message || 'Pedido deletado com sucesso!', 'success');
+                        listItem.remove();
+                    } else {
+                        showNotification(data.message || 'Erro ao deletar pedido.', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('[Client] Erro ao deletar pedido:', error);
+                    showNotification('Erro ao deletar pedido: ' + error.message, 'danger');
+                });
+            }
+
+            
+
+
+function cancelSelectedOrders() {
+    const selectedCheckboxes = document.querySelectorAll('#orders .sku-checkbox:checked');
+    const orderIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.orderId);
+
+    if (orderIds.length === 0) {
+        showNotification('Selecione pelo menos um pedido para cancelar.', 'warning');
+        return;
+    }
+
+    // Confirmação do usuário
+    if (!confirm(`Tem certeza que deseja cancelar ${orderIds.length} pedido(s)?`)) {
+        return;
+    }
+
+    fetch('/check_orders_producao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // Usamos a mesma rota de check, mas com uma ação diferente
+        body: JSON.stringify({ order_ids: orderIds, action: 'cancel' })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Pedidos cancelados com sucesso!', 'success');
+            // Remove os itens da tela e recarrega a página para atualizar tudo
+            location.reload();
+        } else {
+            showNotification(data.message || 'Erro ao cancelar pedidos.', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('[Client] Erro ao cancelar pedidos:', error);
+        showNotification('Erro de comunicação ao cancelar pedidos.', 'danger');
+    });
+}
+
+            
+
+            // Check Orders
+            
+function checkSelectedOrders(action = 'check') {
+    const selectedCheckboxes = document.querySelectorAll('.sku-checkbox:checked');
+    const orderIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.orderId);
+    console.log('[Client] Checkando pedidos:', orderIds, 'Ação:', action);
+
+    if (!orderIds.length) {
+        showNotification('Selecione pelo menos um SKU para checkar.', 'warning');
+        return;
+    }
+
+    fetch('/check_orders_producao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_ids: orderIds, action })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('[Client] Resposta do check:', data);
+        if (data.success) {
+            showNotification(data.message || 'Pedidos checkados com sucesso!', 'success');
+            // Atualizar o histórico automaticamente após o check
+            if (checkedOrdersTable.style.display === 'table') {
+                toggleCheckedHistory();
+            } else {
+                // Atualizar contadores e limpar seleções
+                selectedSkus = [];
+                updateCounters();
+            }
+            location.reload(); // Manter o reload para atualizar outras seções
+        } else {
+            showNotification(data.message || 'Erro ao checkar pedidos.', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('[Client] Erro ao checkar pedidos:', error);
+        showNotification('Erro ao checkar pedidos: ' + error.message, 'danger');
+    });
+}
+
+
+            checkButton.addEventListener('click', function() {
+                console.log('[Client] Botão Check clicado');
+                checkSelectedOrders('check');
+            });
+
+            estoqueButton.addEventListener('click', function() {
+                console.log('[Client] Botão Estoque clicado');
+                checkSelectedOrders('estoque');
+            });
+
+
+function getTodayString() {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = today.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+function normalizeDate(dateStr) {
+    if (!dateStr) return '';
+    const parts = dateStr.trim().split('/');
+    if (parts.length !== 3) return dateStr.trim();
+    const day = parts[0].padStart(2, '0');
+    const month = parts[1].padStart(2, '0');
+    const year = parts[2];
+    return `${day}/${month}/${year}`;
+}
+
+
+            // Toggle History
+ function toggleCheckedHistory(refresh = false) {
+    console.log('[Client] Carregando histórico de pedidos');
+    fetch('/get_checked_orders_producao')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('[Client] Resposta do histórico:', data);
+            if (data.success) {
+                checkedOrdersBody.innerHTML = '';
+                // Ordenar por checked_date (data completa, mais recente primeiro) e limitar a 10000 linhas
+                const sortedOrders = data.orders.sort((a, b) => {
+                    const dateA = a.checked_date ? new Date(a.checked_date.split(' ')[0].split('/').reverse().join('-') + (a.checked_date.includes(' ') ? ' ' + a.checked_date.split(' ')[1] : '')) : new Date(0);
+                    const dateB = b.checked_date ? new Date(b.checked_date.split(' ')[0].split('/').reverse().join('-') + (b.checked_date.includes(' ') ? ' ' + b.checked_date.split(' ')[1] : '')) : new Date(0);
+                    return dateB - dateA; // Ordem decrescente
+                }).slice(0, 10000); // Limitar a 10000 linhas
+
+                sortedOrders.forEach(order => {
+                    const row = document.createElement('tr');
+                    row.className = order.status === 'motoboy' ? 'motoboy' : order.status === 'cancelada' ? 'canceled' : '';
+                    row.innerHTML = `
+                        <td>${order.order_id || 'Desconhecido'}</td>
+                        <td>${order.sku || 'N/A'}</td>
+                        <td>${order.status}</td>
+                        <td>${order.checked_date || ''}</td>
+                        <td>${parseDateOrDay(order.date_shipped)}</td>
+                        <td>${order.producao || ''}</td>
+                        <td><button class="btn btn-warning btn-sm" onclick="resetOrder('${order.id}')">Resetar</button></td>
+                    `;
+                    checkedOrdersBody.appendChild(row);
+                });
+                checkedOrdersTable.style.display = 'table';
+                totalCheck.style.display = 'block';
+                totalCheck.querySelector('span').textContent = sortedOrders.length;
+                historyButton.textContent = refresh ? 'Mostrar Histórico' : 'Ocultar Histórico';
+                // Aplicar filtro após carregar os dados
+                filterCheckedOrders(false);
+            } else {
+                showNotification(data.message || 'Erro ao carregar histórico.', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('[Client] Erro ao carregar histórico:', error);
+            showNotification('Erro ao carregar histórico: ' + error.message, 'danger');
+        });
+}
+
+
+
+
+            historyButton.addEventListener('click', function() {
+                console.log('[Client] Botão Histórico clicado');
+                if (checkedOrdersTable.style.display === 'none' || checkedOrdersTable.style.display === '') {
+                    toggleCheckedHistory();
+                } else {
+                    checkedOrdersTable.style.display = 'none';
+                    totalCheck.style.display = 'none';
+                    historyButton.textContent = 'Mostrar Histórico';
+                }
+            });
+
+            // Tab Click
+            ordersTab.addEventListener('click', function() {
+                console.log('[Client] Aba Mercado Livre clicada');
+            });
+
+            // Initialize Counters and History
+            updateCounters();
+            toggleCheckedHistory(true);
+            console.log('[Client] Event listeners configurados');
+        });
+
+
+function resetOrder(orderId) {
+    console.log('[Client] Botão Resetar clicado para Order_ID:', orderId);
+    const password = prompt('Digite a senha para confirmar o reset do pedido:');
+    if (password !== 'W2025') {
+        showNotification('Senha incorreta. Reset não autorizado.', 'danger');
+        return;
+    }
+    fetch('/reset_order_producao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: orderId })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('[Client] Resposta do reset:', data);
+        if (data.success) {
+            showNotification(data.message || 'Pedido resetado com sucesso!', 'success');
+            location.reload(); // Recarrega a página após o sucesso
+        } else {
+            showNotification(data.message || 'Erro ao resetar pedido.', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('[Client] Erro ao resetar pedido:', error);
+        showNotification('Erro ao resetar pedido: ' + error.message, 'danger');
+    });
+}
+
+
+
+function autoRefreshPage() {
+    console.log('[Client] Atualizando página automaticamente');
+    location.reload();
+}
+
+
+// Função para filtrar pedidos no histórico por SKU
+function filterCheckedOrders(scroll = false) {
+    const searchText = document.getElementById('search-input').value.toLowerCase().trim();
+    const rows = document.querySelectorAll('#checkedOrdersTable tbody tr');
+    let firstVisibleRow = null;
+
+    rows.forEach(row => {
+        const sku = row.cells[1].textContent.toLowerCase();
+        if (searchText === '' || sku.includes(searchText)) {
+            row.style.display = '';
+            if (!firstVisibleRow) {
+                firstVisibleRow = row;
+            }
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    // Rolar até o primeiro item visível apenas se scroll for true (ao pressionar Enter)
+    if (scroll && firstVisibleRow) {
+        firstVisibleRow.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+// Evento de digitação no campo de busca (filtra em tempo real, sem rolagem)
+document.getElementById('search-input').addEventListener('input', function() {
+    filterCheckedOrders(false);
+});
+
+// Evento de pressionar Enter no campo de busca (filtra e rola)
+document.getElementById('search-input').addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault(); // Evita comportamento padrão do Enter
+        filterCheckedOrders(true); // Filtra e rola
+    }
+});
+
+
+
+
+function unlockInfoFields() {
+    const password = prompt('Digite a senha para desbloquear os campos:');
+    if (password !== 'W2025') {
+        showNotification('Senha incorreta. Campos não desbloqueados.', 'danger');
+        return;
+    }
+    const inputs = document.querySelectorAll('.info-section input');
+    inputs.forEach(input => input.disabled = false);
+    showNotification('Campos desbloqueados com sucesso!', 'success');
+}
+
+document.getElementById('infoForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const infoData = {
+        coleta_mercado: formData.get('coleta_mercado') || '',
+        lona_mercado: formData.get('lona_mercado') || '',
+        coleta_flex: formData.get('coleta_flex') || '',
+        lona_flex: formData.get('lona_flex') || '',
+        loja_1: formData.get('loja_1') || '',
+        loja_2: formData.get('loja_2') || '',
+        loja_3: formData.get('loja_3') || ''
+    };
+
+    try {
+        const response = await fetch('/save_info_data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ info_data: infoData })
+        });
+        const result = await response.json();
+        if (result.success) {
+            alert(result.message);
+            for (const [key, value] of Object.entries(infoData)) {
+                const span = document.getElementById(`${key}_value`);
+                if (span) span.textContent = value;
+            }
+            const inputs = document.querySelectorAll('.info-section input');
+            inputs.forEach(input => input.disabled = true);
+        } else {
+            alert(result.message);
+        }
+    } catch (error) {
+        console.error('Erro ao salvar informações:', error);
+        alert('Erro ao salvar informações.');
+    }
+});
+
+
+
+
+
+
+"MOTOR SHOPEE"
+
+
+
+
+function filterCheckedOrdersShopee(scroll = false) {
+    const searchText = document.getElementById('search-input-shopee').value.toLowerCase().trim();
+    const rows = document.querySelectorAll('#checkedOrdersTableShopee tbody tr');
+    let firstVisibleRow = null;
+
+    rows.forEach(row => {
+        const sku = row.cells[1].textContent.toLowerCase();
+        if (searchText === '' || sku.includes(searchText)) {
+            row.style.display = '';
+            if (!firstVisibleRow) {
+                firstVisibleRow = row;
+            }
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    if (scroll && firstVisibleRow) {
+        firstVisibleRow.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+document.getElementById('search-input-shopee').addEventListener('input', function() {
+    filterCheckedOrdersShopee(false);
+});
+
+document.getElementById('search-input-shopee').addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        filterCheckedOrdersShopee(true);
+    }
+});
+
+function toggleCheckedHistoryShopee(refresh = false) {
+    console.log('[Client] Carregando histórico de pedidos Shopee');
+    fetch('/get_checked_orders_shopee')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('[Client] Resposta do histórico Shopee:', data);
+            if (data.success) {
+                const body = document.getElementById('checkedOrdersBodyShopee');
+                const table = document.getElementById('checkedOrdersTableShopee');
+                const totalCheck = document.getElementById('totalCheckShopee');
+                body.innerHTML = '';
+                const sortedOrders = data.orders.sort((a, b) => {
+                    const dateA = a.data_check ? new Date(a.data_check.split(' ')[0].split('/').reverse().join('-') + (a.data_check.includes(' ') ? ' ' + a.data_check.split(' ')[1] : '')) : new Date(0);
+                    const dateB = b.data_check ? new Date(b.data_check.split(' ')[0].split('/').reverse().join('-') + (b.data_check.includes(' ') ? ' ' + b.data_check.split(' ')[1] : '')) : new Date(0);
+                    return dateB - dateA;
+                }).slice(0, 10000);
+
+                sortedOrders.forEach(order => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${order.pedido || 'Desconhecido'}</td>
+                        <td>${order.sku || 'N/A'}</td>
+                        <td>${order.producao || '-'}</td>
+                        <td>${order.data_check || '-'}</td>
+                        <td><button class="btn btn-sm btn-danger" onclick="resetarPedido('${order.pedido}')">Resetar</button></td>
+                    `;
+                    body.appendChild(row);
+                });
+
+                table.style.display = 'table';
+                totalCheck.style.display = 'block';
+                totalCheck.querySelector('span').textContent = sortedOrders.length;
+                document.getElementById('historyButtonShopee').textContent = refresh ? 'Mostrar Histórico Shopee' : 'Ocultar Histórico Shopee';
+                filterCheckedOrdersShopee(false);
+            } else {
+                showNotification(data.message || 'Erro ao carregar histórico Shopee.', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('[Client] Erro ao carregar histórico Shopee:', error);
+            showNotification('Erro ao carregar histórico Shopee: ' + error.message, 'danger');
+        });
+}
+
+document.getElementById('historyButtonShopee').addEventListener('click', function() {
+    const table = document.getElementById('checkedOrdersTableShopee');
+    const totalCheck = document.getElementById('totalCheckShopee');
+    if (table.style.display === 'none' || table.style.display === '') {
+        toggleCheckedHistoryShopee();
+    } else {
+        table.style.display = 'none';
+        totalCheck.style.display = 'none';
+        this.textContent = 'Mostrar Histórico Shopee';
+    }
+});
+
+function resetarPedido(pedidoId) {
+    console.log('[Client] Botão Resetar clicado para Order_ID:', pedidoId);
+    const senha = prompt("Digite a senha para resetar o pedido:");
+    if (senha !== "W2025") {
+        showNotification("Senha incorreta. Ação cancelada.", "danger");
+        return;
+    }
+
+    fetch('/reset_order_shopee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: pedidoId })
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification("Pedido resetado com sucesso!", "success");
+            window.location.href = '/producao?activeTab=shopee-tab';
+        } else {
+            showNotification("Erro ao resetar: " + data.message, "danger");
+        }
+    })
+    .catch(err => {
+        console.error("[Client] Erro ao resetar:", err);
+        showNotification("Erro ao resetar pedido: " + err.message, "danger");
+    });
+}
+
+function deleteInvalidOrderShopee(orderId) {
+    if (!confirm(`Deseja realmente deletar o pedido ${orderId}?`)) return;
+
+    fetch('/delete_invalid_order_shopee2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: orderId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert("Pedido deletado com sucesso!");
+            location.reload();
+        } else {
+            alert("Erro ao deletar: " + data.message);
+        }
+    })
+    .catch(err => {
+        console.error("Erro:", err);
+        alert("Erro ao deletar pedido.");
+    });
+}
+
+
+
+// Função para exibir notificações
+function showNotification(message, type = 'info') {
+    const notificationsContainer = document.getElementById('notificationsContainer');
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show`;
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    notificationsContainer.appendChild(notification);
+    setTimeout(() => notification.remove(), 5000);
+}
+
+    // Função para atualizar o contador de SKUs selecionados (Shopee)
+
+function updateSelectedCountShopee() {
+    const checkboxes = document.querySelectorAll('.shopee-sku-checkbox:checked');
+    const selectedCount = checkboxes.length;
+    document.getElementById('selected-skus-shopee').textContent = selectedCount;
+    document.getElementById('checkButtonShopee').classList.toggle('visible', selectedCount > 0);
+    document.getElementById('estoqueButtonShopee').classList.toggle('visible', selectedCount > 0);
+}
+
+    // Função para copiar SKUs selecionados (Shopee)
+    // Função para copiar SKUs selecionados (Shopee)
+function copySelectedSkusShopee() {
+    const checkboxes = document.querySelectorAll('.shopee-sku-checkbox:checked');
+    const skus = Array.from(checkboxes).map(cb => cb.dataset.sku).join('\n');
+    if (!skus) {
+        showNotification('Nenhum SKU Shopee selecionado para copiar.', 'warning');
+        return;
+    }
+    navigator.clipboard.writeText(skus).then(() => {
+        showNotification('SKUs Shopee copiados para a área de transferência!', 'success');
+    }).catch(err => {
+        console.error('[Client] Erro ao copiar SKUs Shopee:', err);
+        showNotification('Erro ao copiar SKUs Shopee.', 'danger');
+    });
+}
+
+    // Função para processar pedidos Shopee
+document.getElementById('process-orders-shopee-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const ordersText = this.querySelector('textarea[name="orders"]').value.trim();
+    if (!ordersText) {
+        showNotification('Por favor, insira o texto dos pedidos.', 'warning');
+        return;
+    }
+
+    const formData = new FormData(this);
+    fetch('/process_orders_shopee_producao', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Recarrega a página se houver pedidos processados ou sucesso
+        if (data.success || (data.inserted_orders && data.inserted_orders.length > 0)) {
+            window.location.href = '/producao?activeTab=shopee-tab';
+        } else {
+            // Exibe mensagem de erro se nenhum pedido foi processado
+            showNotification(data.message || 'Nenhum pedido processado. Verifique o formato dos dados.', 'danger');
+            // Atualiza a seção de pedidos não processados
+            const container = document.getElementById('shopee-invalid-orders-container');
+            if (container && data.nao_processados && data.nao_processados.length > 0) {
+                container.innerHTML = '';
+                data.nao_processados.forEach(order => {
+                    const div = document.createElement('div');
+                    div.className = 'shopee-order-item invalid-order';
+                    div.dataset.orderId = order.order_id;
+                    div.innerHTML = `
+                        <div class="shopee-order-details">
+                            <span class="shopee-order-id">${order.order_id || 'Desconhecido'}</span>
+                            <span class="shopee-error">${order.error || 'Motivo não especificado'}</span>
+                        </div>
+                        ${order.order_id && order.order_id !== 'N/A' ? `<button class="btn btn-danger btn-sm delete-invalid-shopee" data-order-id="${order.order_id}">Deletar</button>` : ''}
+                    `;
+                    container.appendChild(div);
+                });
+                // Adiciona eventos de clique para os botões "Deletar"
+                document.querySelectorAll('.delete-invalid-shopee').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const orderId = this.dataset.orderId;
+                        fetch('/delete_invalid_order_shopee2', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ order_id: orderId })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showNotification(data.message, 'success');
+                                this.parentElement.remove();
+                            } else {
+                                showNotification(data.message, 'danger');
+                            }
+                        });
+                    });
+                });
+            }
+        }
+    })
+    .catch(error => {
+        console.error('[Client] Erro ao processar pedidos Shopee:', error);
+        showNotification('Erro ao processar pedidos: ' + error.message, 'danger');
+    });
+});
+
+    // Função para marcar pedidos Shopee
+// Função para marcar pedidos Shopee
+function checkOrdersShopee(action) {
+    const checkboxes = document.querySelectorAll('.shopee-sku-checkbox:checked');
+    const orderIds = Array.from(checkboxes).map(cb => cb.dataset.orderId);
+    if (orderIds.length === 0) {
+        showNotification('Nenhum pedido Shopee selecionado.', 'warning');
+        return;
+    }
+    fetch('/check_orders_shopee2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_ids: orderIds, action: action })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            // Atualizar dinamicamente a seção de pedidos
+            fetch('/get_shopee_orders')
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('shopee-orders-container');
+                    container.innerHTML = '';
+                    Object.entries(data.sections).forEach(([section, orders]) => {
+                        const sectionDiv = document.createElement('div');
+                        sectionDiv.className = 'shopee-order-section';
+                        sectionDiv.innerHTML = `<h3>${section}</h3><div class="shopee-order-list"></div>`;
+                        const orderList = sectionDiv.querySelector('.shopee-order-list');
+                        orders.sort((a, b) => a.sku.localeCompare(b.sku)).forEach(order => {
+                            const orderDiv = document.createElement('div');
+                            orderDiv.className = 'shopee-order-item';
+                            orderDiv.dataset.orderId = order.id;
+                            orderDiv.dataset.sku = order.sku;
+                            orderDiv.innerHTML = `
+                                <div class="shopee-order-image">
+                                    ${order.sku ? `
+                                    <img src="/get_apr_image/${encodeURIComponent(order.sku)}?t=${Date.now()}"
+                                         class="sku-image"
+                                         alt="Imagem de ${order.sku}"
+                                         data-sku="${order.sku}"
+                                         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                    <div class="image-placeholder" data-sku="${order.sku}">Sem Imagem</div>
+                                    ` : `<div class="image-placeholder" data-sku="${order.sku}">Sem Imagem</div>`}
+                                </div>
+                                <div class="shopee-order-details">
+                                    <span class="shopee-sku-text">${order.sku}</span>
+                                </div>
+                                <input type="checkbox" class="shopee-sku-checkbox" data-sku="${order.sku}" data-order-id="${order.id}">
+                            `;
+                            orderList.appendChild(orderDiv);
+                        });
+                        container.appendChild(sectionDiv);
+                    });
+                    // Reinicializar eventos de imagem e seleção
+                    document.querySelectorAll('.shopee-order-item').forEach(item => {
+                        const checkbox = item.querySelector('.shopee-sku-checkbox');
+                        item.addEventListener('click', function(e) {
+                            if (e.target !== checkbox) {
+                                checkbox.checked = !checkbox.checked;
+                                item.classList.toggle('selected', checkbox.checked);
+                                updateSelectedCountShopee();
+                            }
+                        });
+                        checkbox.addEventListener('change', function() {
+                            item.classList.toggle('selected', checkbox.checked);
+                            updateSelectedCountShopee();
+                        });
+                        const image = item.querySelector('.sku-image');
+                        const placeholder = item.querySelector('.image-placeholder');
+                        const sku = item.getAttribute('data-sku');
+                        if (image) {
+                            image.addEventListener('click', e => {
+                                e.stopPropagation();
+                                if (sku) showImageModalShopee(sku);
+                            });
+                            image.addEventListener('load', function() {
+                                this.classList.add('loaded');
+                                this.style.display = 'block';
+                                this.nextElementSibling.style.display = 'none';
+                            });
+                            image.addEventListener('error', function() {
+                                this.style.display = 'none';
+                                this.nextElementSibling.style.display = 'flex';
+                            });
+                            if (image.complete && image.naturalWidth > 0) {
+                                image.dispatchEvent(new Event('load'));
+                            } else if (image.complete) {
+                                image.dispatchEvent(new Event('error'));
+                            }
+                        }
+                        if (placeholder) {
+                            placeholder.addEventListener('click', e => {
+                                e.stopPropagation();
+                                if (sku) showImageModalShopee(sku);
+                            });
+                        }
+                    });
+                    // Atualizar contadores
+                    document.getElementById('total-skus-shopee').textContent = document.querySelectorAll('.shopee-sku-checkbox').length;
+                    updateSelectedCountShopee();
+                })
+                .catch(error => {
+                    console.error('[Client] Erro ao atualizar pedidos Shopee:', error);
+                    showNotification('Erro ao atualizar pedidos Shopee.', 'danger');
+                    window.location.reload(); // Fallback para reload se a atualização falhar
+                });
+        } else {
+            showNotification('Erro: ' + data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('[Client] Erro ao marcar pedidos Shopee:', error);
+        showNotification('Erro ao marcar pedidos Shopee: ' + error.message, 'danger');
+        window.location.reload(); // Fallback para reload em caso de erro
+    });
+}
+
+    // Função para deletar pedidos inválidos Shopee
+function deleteInvalidOrderShopee() {
+    const orderId = this.dataset.orderId;
+    fetch('/delete_invalid_order_shopee2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id: orderId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            window.location.href = '/producao?activeTab=shopee-tab';
+        } else {
+            showNotification(data.message, 'danger');
+            window.location.href = '/producao?activeTab=shopee-tab';
+        }
+    })
+    .catch(error => {
+        console.error('[Client] Erro ao deletar pedido inválido Shopee:', error);
+        showNotification('Erro ao deletar pedido: ' + error.message, 'danger');
+        window.location.href = '/producao?activeTab=shopee-tab';
+    });
+}
+
+document.querySelectorAll('.delete-invalid-shopee').forEach(button => {
+    button.addEventListener('click', deleteInvalidOrderShopee);
+});
+
+    // Função para exibir modal de imagem
+    function showImageModal(sku) {
+    console.log(`[Client] Abrindo modal para SKU: ${sku}`);
+    const modalEl = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    const modalPlaceholder = document.getElementById('modalImagePlaceholder');
+    const modalTitle = document.getElementById('imageModalLabel');
+
+    modalTitle.textContent = `Imagem do SKU: ${sku}`;
+    modalImage.src = `/get_apr_image/${encodeURIComponent(sku)}?t=${Date.now()}`;
+    modalImage.style.display = 'none';
+    modalPlaceholder.style.display = 'flex';
+
+    modalImage.onload = function () {
+        console.log(`[Client] Imagem carregada para SKU: ${sku}`);
+        modalImage.style.display = 'block';
+        modalPlaceholder.style.display = 'none';
+    };
+
+    modalImage.onerror = function () {
+        console.log(`[Client] Erro ao carregar imagem para SKU: ${sku}`);
+        modalImage.style.display = 'none';
+        modalPlaceholder.style.display = 'flex';
+    };
+
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+
+    modalEl.addEventListener('hidden.bs.modal', function cleanup() {
+        modalImage.src = '';
+        modalImage.style.display = 'none';
+        modalPlaceholder.style.display = 'flex';
+        modalEl.removeEventListener('hidden.bs.modal', cleanup);
+    });
+}
+
+
+    // Configurar eventos para seleção de SKUs Shopee
+    document.addEventListener('DOMContentLoaded', function() {
+    // Função para inicializar eventos de imagem
+    function initializeImageEvents() {
+        document.querySelectorAll('#shopee .shopee-order-item').forEach(item => {
+            const image = item.querySelector('.sku-image');
+            const placeholder = item.querySelector('.image-placeholder');
+            const sku = item.getAttribute('data-sku');
+
+            if (image) {
+                image.addEventListener('click', e => {
+                    e.stopPropagation();
+                    if (sku) showImageModalShopee(sku);
+                });
+                image.addEventListener('load', function() {
+                    this.classList.add('loaded');
+                    this.style.display = 'block';
+                    this.nextElementSibling.style.display = 'none';
+                });
+                image.addEventListener('error', function() {
+                    this.style.display = 'none';
+                    this.nextElementSibling.style.display = 'flex';
+                });
+                // Verifica se a imagem já está carregada
+                if (image.complete && image.naturalWidth > 0) {
+                    image.dispatchEvent(new Event('load'));
+                } else if (image.complete) {
+                    image.dispatchEvent(new Event('error'));
+                }
+            }
+
+            if (placeholder) {
+                placeholder.addEventListener('click', e => {
+                    e.stopPropagation();
+                    if (sku) showImageModalShopee(sku);
+                });
+            }
+        });
+    }
+
+    // Inicializa eventos de imagem
+    initializeImageEvents();
+
+    // Configurar eventos para seleção de SKUs Shopee
+    document.querySelectorAll('.shopee-order-item').forEach(item => {
+        const checkbox = item.querySelector('.shopee-sku-checkbox');
+        item.addEventListener('click', function(e) {
+            if (e.target !== checkbox) {
+                checkbox.checked = !checkbox.checked;
+                item.classList.toggle('selected', checkbox.checked);
+                updateSelectedCountShopee();
+            }
+        });
+        checkbox.addEventListener('change', function() {
+            item.classList.toggle('selected', checkbox.checked);
+            updateSelectedCountShopee();
+        });
+    });
+
+    // Atualizar contadores Shopee
+    document.getElementById('total-skus-shopee').textContent = document.querySelectorAll('.shopee-sku-checkbox').length;
+    updateSelectedCountShopee();
+});
+    
+
+    // === MERCADO LIVRE ===
+document.querySelectorAll('#mercado .sku-image, #mercado .image-placeholder').forEach(el => {
+    el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const sku = el.getAttribute('data-sku');
+        if (sku) showImageModal(sku);
+    });
+});
+
+// === SHOPEE ===
+document.querySelectorAll('#shopee .sku-image, #shopee .image-placeholder').forEach(el => {
+    el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const sku = el.getAttribute('data-sku');
+        if (sku) showImageModalShopee(sku);
+    });
+});
+
+// Função para desbloquear o campo Shopee
+function unlockInfoFieldsShopee() {
+    const senha = prompt("Digite a senha para desbloquear o campo:");
+    if (senha !== "W2025") {
+        showNotification("Senha incorreta. Campo não desbloqueado.", "danger");
+        return;
+    }
+    const input = document.getElementById('coleta_shopee');
+    input.disabled = false;
+    input.focus();
+    showNotification("Campo desbloqueado com sucesso!", "success");
+}
+
+// Manipulação do formulário Shopee
+document.getElementById('infoFormShopee').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const coletaShopee = document.getElementById('coleta_shopee').value.trim();
+    if (!coletaShopee) {
+        showNotification("O campo SHOPEE TOTAL é obrigatório.", "warning");
+        return;
+    }
+    if (isNaN(coletaShopee) || parseInt(coletaShopee) < 0) {
+        showNotification("O valor de SHOPEE TOTAL deve ser um número não negativo.", "warning");
+        return;
+    }
+
+    const formData = new FormData(this);
+    try {
+        const response = await fetch('/save_info_shopee', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        if (data.success) {
+            showNotification(data.message, 'success');
+            document.getElementById('coleta_shopee').disabled = true;
+        } else {
+            showNotification(data.message || 'Erro ao salvar informações Shopee.', 'danger');
+        }
+    } catch (error) {
+        console.error('[Client] Erro ao salvar informações Shopee:', error);
+        showNotification('Erro ao salvar informações Shopee: ' + error.message, 'danger');
+    }
+});
+  
+
+
+    
+</script>
+
+   
+</body>
+</html>

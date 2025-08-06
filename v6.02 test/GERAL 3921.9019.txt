@@ -1,0 +1,13 @@
+GERAL: 3921.9019
+LONA: 6006.32.20
+PESO
+PR: 300g
+PV: 500g
+KC e KD: 1,500kg
+PC: 1 kg
+VC: 1,200 kg
+CL:700g
+TPP: 1,500 kg
+TPG: 3,900 kg
+RV: 800g
+FF: 500g

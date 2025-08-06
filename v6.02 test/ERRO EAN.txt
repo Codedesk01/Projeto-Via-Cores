@@ -1,0 +1,144 @@
+PCIDMULTI012-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIDMULTI013-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIDMULTI014-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIDMULTI015-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIDMULTI016-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG001-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG002-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG003-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG004-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG005-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG006-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG007-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG008-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG009-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG010-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG011-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG012-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG013-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG014-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG015-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG016-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG017-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG018-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG019-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG020-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG021-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG022-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG023-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG024-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG025-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG026-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG027-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG028-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG029-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG030-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG031-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG032-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG033-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG034-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG035-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCIG036-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVBU012-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+VCBU008-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+VCBU009-V	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+
+------------------------------------------------------------------------------
+
+
+PCDA046-P X OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCDA056-P SEMARTE OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRBC013-P OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRBC014-P OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRBC015-P OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRBC016-P OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRBC018-P OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRBC019-P OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRBC020-P OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRBQ001-P OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRBQ002-P OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRBQ003-P OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVDIMULTI001-P OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+RVCL007-P X OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+
+-----------------------------------------------------------------------------------
+
+
+
+CLBT00-F X X x	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+CLD010-F X X OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+CLNN010-F X X ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+CLTY010-F X X ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+CLVC024-F X X ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+FFAS001-F OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+FFDA014-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+FFDA015-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+FFDA016-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+FFDA022-F OK ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+FFDV020-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+FFMULTI003-F X X X	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+KCFL042-F OK ok OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+KCPQ007-F OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+KDFL041-F OK ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+KDPQ009-F OK OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+KDVC006-F OK ok OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+KDVC008-F OK ok OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+KDVM003-F OK OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+KDVM004-F OK OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+KDVM005-F OK OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+KDVM006-F OK OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+KDVM007-F OK OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCDA070-F OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCDAMULTI006-F X X X	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCNT003-130-F x x X	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCPQ011-F OK ok OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCVC029-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRAJ030-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRAS049-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRAS050-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRBQ001-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRBQ002-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRBQ003-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRCB054-130-F OK x ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRCB054-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRCB055-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRED002-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRED003-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRFL179-F OK ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRPQ021-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRSZ037-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PRSZ038-F OK ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVFL125-F OK ok OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVHC019-Fv OK OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVPQ011-F OK ok OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVRV054-F OK ok OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVVC046-F ok ok ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+RVAV005-F OK X ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+RVCL007-F OK x ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+RVCT002-F OK x ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+RVFL045-F OK X ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+RVPQ007-F OK X ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+TPGL018-350-F OK x x	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+TPMD001-350-F OK x x	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+TPNN005-350-F OK x x	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+TPVM002-350-F OK x x	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+VCFL097-F OK X ok	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+VCNR010-Fv OK X OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+VCRV037-F OK X OK	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+----------------------------------------------------------------------------------
+
+
+CLAS061	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+FF155M001	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PCDV036-130	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVID079-100	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+RVGF025-130	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVDA145-VF	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVDV085-VF	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVDV086-VF	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVGL114-VF	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVJD069-VF	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVJD070-VF	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVJD071-VF	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVJD072-VF	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.
+PVMZ017VF	Erro Crítico: SKU (coluna 1) ou EAN (coluna 2) ausente.

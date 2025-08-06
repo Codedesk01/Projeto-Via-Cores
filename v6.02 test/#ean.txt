@@ -1,0 +1,434 @@
+# ===== SISTEMA EAN =====
+
+def get_ean_db():
+    """Conecta ao banco de dados EAN e configura row_factory."""
+    conn = sqlite3.connect('ean_control.db', isolation_level=None)
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA synchronous=NORMAL;")
+    conn.execute("PRAGMA cache_size=10000;")
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def sufixo_valido(sku):
+    sufixos_validos = ['-999', '-100', '-350', '-VF', '-130', '-175', '-F', '-P', '-V']
+    return (
+        any(sku.endswith(suf) for suf in sufixos_validos) or
+        not any(sku.endswith(suf) for suf in ['-F', '-P', '-V'])
+    )
+
+def log_ean_error(cursor, error_text, error_type, created_date):
+    """Registra erros no banco."""
+    try:
+        cursor.execute("""
+            INSERT INTO ean_errors (error_text, error_type, created_date)
+            VALUES (?, ?, ?)
+        """, (error_text, error_type, created_date))
+    except sqlite3.Error as e:
+        logger.error(f"Erro ao registrar erro EAN: {str(e)}")
+
+def classificar_loja_por_sku(sku):
+    """Classifica a loja com base no sufixo do SKU."""
+    if sku.endswith('-F'):
+        return 'loja2'
+    elif sku.endswith('-P'):
+        return 'loja3'
+    elif sku.endswith('-V'):
+        return 'loja4'
+    return 'loja1'
+
+def init_ean_database():
+    """Inicializa o banco de dados EAN com índices otimizados."""
+    conn = get_ean_db()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS ean_data (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sku TEXT NOT NULL,
+                ean TEXT NOT NULL,
+                created_date TEXT NOT NULL,
+                created_by TEXT,
+                UNIQUE(sku, ean)
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS ean_loja_status (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ean_data_id INTEGER NOT NULL,
+                loja_id TEXT NOT NULL,
+                checked INTEGER DEFAULT 0,
+                checked_date TEXT,
+                checked_by TEXT,
+                FOREIGN KEY (ean_data_id) REFERENCES ean_data(id),
+                UNIQUE(ean_data_id, loja_id)
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS ean_errors (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                error_text TEXT NOT NULL,
+                error_type TEXT NOT NULL,
+                created_date TEXT NOT NULL,
+                resolved INTEGER DEFAULT 0
+            )
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_ean_data_sku_ean ON ean_data(sku, ean)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_ean_loja_status_ean_data_id ON ean_loja_status(ean_data_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_ean_data_created_date ON ean_data(created_date)")
+        
+        conn.commit()
+        logger.info("Banco de dados EAN inicializado com índices otimizados")
+        
+    except sqlite3.Error as e:
+        logger.error(f"Erro ao inicializar banco de dados EAN: {str(e)}")
+        raise
+    finally:
+        conn.close()
+
+# Inicializa o banco de dados EAN
+init_ean_database()
+
+
+
+#ean
+
+@app.route('/consulta_ean')
+@login_required
+def consulta_ean():
+    if current_user.role != 'conferente':
+        flash('Acesso negado: permissão insuficiente.', 'error')
+        return redirect(url_for('login'))
+    return render_template('ean.html')
+
+@app.route('/ean')
+@login_required
+def ean_page():
+    """Página principal do sistema EAN."""
+    try:
+        return render_template('ean.html')
+    except FileNotFoundError:
+        return "Arquivo ean.html não encontrado", 404
+
+@app.route('/api/ean/all', methods=['GET'])
+@login_required
+def get_all_eans():
+    """Retorna todos os EANs agrupados por loja."""
+    try:
+        conn = get_ean_db()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT ed.sku, ed.ean, ed.created_by, els.loja_id
+            FROM ean_data ed
+            JOIN ean_loja_status els ON ed.id = els.ean_data_id
+        """)
+        rows = cursor.fetchall()
+        conn.close()
+
+        lojas = {
+            'loja1': [],
+            'loja2': [],
+            'loja3': [],
+            'loja4': []
+        }
+
+        for row in rows:
+            loja = row['loja_id']
+            lojas[loja].append({
+                'subloja': 'mercado',
+                'sku': row['sku'],
+                'ean': row['ean']
+            })
+
+        return jsonify({'success': True, 'lojas': lojas})
+    except Exception as e:
+        logger.error(f"Erro ao buscar EANs: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/ean/process', methods=['POST'])
+@login_required
+def processar_eans():
+    """Processa texto com SKUs e EANs, salvando no banco de dados."""
+    import re
+    data = request.get_json()
+    text = data.get('text', '')
+    linhas = text.strip().split('\n')
+
+    conn = get_ean_db()
+    cursor = conn.cursor()
+
+    results = {
+        'success_count': 0,
+        'error_count': 0,
+        'duplicates': [],
+        'errors': [],
+        'loja_data': {
+            'loja1': [],
+            'loja2': [],
+            'loja3': [],
+            'loja4': []
+        }
+    }
+
+    prefixos_validos = ["PV", "PH", "FF", "FH", "RV", "PR", "PC", "CL", "KD", "KC", "VC", "TP"]
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    for linha in linhas:
+        partes = linha.strip().split('\t')
+        if len(partes) < 2:
+            results['errors'].append(f"Linha inválida (faltando SKU/EAN): {linha}")
+            continue
+
+        sku = partes[0].strip().upper()
+        ean = partes[1].strip()
+
+        if not sku or not ean:
+            results['errors'].append(f"SKU ou EAN ausente: {linha}")
+            continue
+
+        prefixo = sku[:2]
+        if prefixo not in prefixos_validos:
+            results['errors'].append(f"Prefixo inválido no SKU: {sku}")
+            continue
+
+        if not sufixo_valido(sku):
+            results['errors'].append(f"Sufixo inválido no SKU: {sku}")
+            continue
+
+        if re.search(r"[^-](F|P|V)$", sku):
+            results['errors'].append(f"Sufixo inválido sem hífen no SKU: {sku}")
+            continue
+
+        cursor.execute("SELECT id FROM ean_data WHERE sku = ? AND ean = ?", (sku, ean))
+        if cursor.fetchone():
+            results['duplicates'].append(sku)
+            continue
+
+        cursor.execute("SELECT sku FROM ean_data WHERE ean = ?", (ean,))
+        row = cursor.fetchone()
+        if row and row[0] != sku:
+            results['errors'].append(f"EAN {ean} já utilizado com outro SKU: {row[0]}")
+            continue
+
+        loja = classificar_loja_por_sku(sku)
+        try:
+            cursor.execute(
+                "INSERT INTO ean_data (sku, ean, created_date, created_by) VALUES (?, ?, ?, ?)",
+                (sku, ean, now, current_user.username)
+            )
+            ean_id = cursor.lastrowid
+
+            cursor.execute(
+                "INSERT INTO ean_loja_status (ean_data_id, loja_id, checked, checked_date, checked_by) VALUES (?, ?, ?, ?, ?)",
+                (ean_id, loja, 0, None, None)
+            )
+
+            results['loja_data'][loja].append({'sku': sku, 'ean': ean})
+            results['success_count'] += 1
+        except Exception as e:
+            results['errors'].append(f"Erro ao cadastrar {sku}: {str(e)}")
+
+    conn.commit()
+    conn.close()
+    results['error_count'] = len(results['errors'])
+    return jsonify({'success': True, 'results': results})
+
+@app.route('/api/ean/loja/<loja_id>', methods=['GET'])
+@login_required
+def get_loja_eans(loja_id):
+    """Retorna todos os EANs de uma loja específica."""
+    try:
+        if loja_id not in ['loja1', 'loja2', 'loja3', 'loja4']:
+            return jsonify({'success': False, 'error': 'ID de loja inválido'}), 400
+        
+        sku_filter = request.args.get('sku', None)
+        
+        conn = get_ean_db()
+        cursor = conn.cursor()
+        
+        query = """
+            SELECT ed.id, ed.sku, ed.ean, ed.created_date, ed.created_by, els.checked, els.checked_date, els.checked_by
+            FROM ean_data ed
+            JOIN ean_loja_status els ON ed.id = els.ean_data_id
+            WHERE els.loja_id = ?
+        """
+        params = [loja_id]
+        
+        if sku_filter:
+            query += " AND ed.sku LIKE ?"
+            params.append(f"%{sku_filter}%")
+        
+        query += " ORDER BY ed.sku, ed.ean"
+        
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        conn.close()
+        
+        eans = [dict(row) for row in rows]
+        
+        return jsonify({'success': True, 'data': eans})
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar EANs da loja {loja_id}: {str(e)}")
+        return jsonify({'success': False, 'error': f'Erro interno: {str(e)}'}), 500
+
+@app.route('/api/ean/update-status', methods=['POST'])
+@login_required
+def update_status():
+    """Atualiza o status de verificação de um EAN para uma loja."""
+    try:
+        data = request.get_json()
+        
+        required_fields = ['ean_data_id', 'loja_id', 'checked']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'success': False, 'error': f'Campo obrigatório ausente: {field}'}), 400
+        
+        ean_data_id = data['ean_data_id']
+        loja_id = data['loja_id']
+        checked = data['checked']
+        
+        if loja_id not in ['loja1', 'loja2', 'loja3', 'loja4']:
+            return jsonify({'success': False, 'error': 'ID de loja inválido'}), 400
+        
+        conn = get_ean_db()
+        cursor = conn.cursor()
+        
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S') if checked else None
+        cursor.execute("""
+            UPDATE ean_loja_status 
+            SET checked = ?, checked_date = ?, checked_by = ?
+            WHERE ean_data_id = ? AND loja_id = ?
+        """, (1 if checked else 0, current_time, current_user.username, ean_data_id, loja_id))
+        
+        conn.commit()
+        success = cursor.rowcount > 0
+        conn.close()
+        
+        if success:
+            logger.info(f"Status EAN atualizado: EAN ID {ean_data_id}, Loja {loja_id}, Checked: {checked}")
+        else:
+            logger.warning(f"Nenhum registro EAN encontrado para atualizar: EAN ID {ean_data_id}, Loja {loja_id}")
+        
+        return jsonify({'success': success})
+        
+    except Exception as e:
+        logger.error(f"Erro ao atualizar status: {str(e)}")
+        return jsonify({'success': False, 'error': f'Erro interno: {str(e)}'}), 500
+
+@app.route('/api/ean/statistics', methods=['GET'])
+@login_required
+def get_statistics():
+    """Retorna estatísticas do sistema EAN."""
+    try:
+        conn = get_ean_db()
+        cursor = conn.cursor()
+        
+        stats = {}
+        cursor.execute("SELECT COUNT(*) FROM ean_data")
+        stats['total_eans'] = cursor.fetchone()[0]
+        
+        for loja_id in ['loja1', 'loja2', 'loja3', 'loja4']:
+            cursor.execute("SELECT COUNT(*) FROM ean_loja_status WHERE loja_id = ?", (loja_id,))
+            stats[f'total_{loja_id}'] = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM ean_loja_status WHERE loja_id = ? AND checked = 1", (loja_id,))
+            stats[f'checked_{loja_id}'] = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM ean_errors WHERE resolved = 0")
+        stats['unresolved_errors'] = cursor.fetchone()[0]
+        
+        conn.close()
+        return jsonify({'success': True, 'stats': stats})
+        
+    except Exception as e:
+        logger.error(f"Erro ao obter estatísticas: {str(e)}")
+        return jsonify({'success': False, 'error': f'Erro interno: {str(e)}'}), 500
+
+@app.route('/api/ean/errors', methods=['GET'])
+@login_required
+def get_errors():
+    """Retorna lista de erros não resolvidos."""
+    try:
+        conn = get_ean_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, error_text, error_type, created_date, resolved
+            FROM ean_errors 
+            WHERE resolved = 0
+            ORDER BY created_date DESC
+        """)
+        rows = cursor.fetchall()
+        conn.close()
+        
+        return jsonify({'success': True, 'errors': [dict(row) for row in rows]})
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar erros: {str(e)}")
+        return jsonify({'success': False, 'error': f'Erro interno: {str(e)}'}), 500
+
+@app.route('/api/ean/resolve-error/<int:error_id>', methods=['POST'])
+@login_required
+def resolve_ean_error_route(error_id):
+    """Marca um erro como resolvido."""
+    try:
+        conn = get_ean_db()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE ean_errors SET resolved = 1 WHERE id = ?", (error_id,))
+        conn.commit()
+        success = cursor.rowcount > 0
+        conn.close()
+        
+        return jsonify({'success': success})
+        
+    except Exception as e:
+        logger.error(f"Erro ao resolver erro {error_id}: {str(e)}")
+        return jsonify({'success': False, 'error': f'Erro interno: {str(e)}'}), 500
+
+@app.route('/download_ean_pdf/<loja_id>', methods=['GET'])
+@login_required
+def download_ean_pdf(loja_id):
+    """Gera um PDF com os EANs de uma loja."""
+    try:
+        if loja_id not in ['loja1', 'loja2', 'loja3', 'loja4']:
+            return jsonify({'success': False, 'message': 'ID de loja inválido'}), 400
+
+        conn = get_ean_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT sku, ean FROM ean_data JOIN ean_loja_status ON ean_data.id = ean_loja_status.ean_data_id WHERE loja_id = ?", (loja_id,))
+        rows = cursor.fetchall()
+        conn.close()
+
+        buffer = BytesIO()
+        c = canvas.Canvas(buffer, pagesize=A4)
+        c.setFont("Helvetica", 12)
+        y = 800
+        c.drawString(100, y, f"EANs para {loja_id}")
+        y -= 30
+
+        for row in rows:
+            c.drawString(100, y, f"SKU: {row['sku']} - EAN: {row['ean']}")
+            y -= 20
+            if y < 50:
+                c.showPage()
+                y = 800
+
+        c.save()
+        buffer.seek(0)
+        return send_file(buffer, as_attachment=True, download_name=f"eans_{loja_id}.pdf", mimetype='application/pdf')
+
+    except Exception as e:
+        logger.error(f"Erro ao gerar PDF para loja {loja_id}: {str(e)}")
+        return jsonify({'success': False, 'message': f'Erro ao gerar PDF: {str(e)}'}), 500
+
+
+
+
+#fim ean
+
+
+
+
+
+# ===== FIM SISTEMA EAN =====

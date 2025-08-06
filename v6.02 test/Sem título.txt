@@ -1,0 +1,852 @@
+
+// Toggle do sidebar
+document.getElementById('toggleSidebar').addEventListener('click', () => {
+  document.body.classList.toggle('sidebar-collapsed');
+  document.getElementById('sidebar').classList.toggle('collapsed');
+  document.getElementById('sidebar').classList.toggle('expanded');
+});
+
+// Estrutura de dados otimizada com mapas
+const db = {
+  registros: {
+    loja1: new Map(), // Map<subloja, Map<sku, ean>>
+    loja2: new Map(),
+    loja3: new Map(),
+    loja4: new Map()
+  },
+  checks: new Map() // Map<sku|ean|loja|subloja, Set<cor>>
+};
+
+const corNome = {
+  blue: 'Usuário Azul',
+  red: 'Usuário Vermelho',
+  yellow: 'Usuário Amarelo',
+  orange: 'Usuário Laranja'
+};
+
+const senhas = {
+  blue: 'A',
+  red: 'V',
+  yellow: 'M',
+  orange: 'L'
+};
+
+const sublojas = ['mercado', 'shopee', 'shein', 'magalu', 'site'];
+
+// Usuário atual
+let corAtual = 'blue';
+document.getElementById('currentUser').textContent = corNome[corAtual];
+
+let ultimoSKU = {
+  loja1: '',
+  loja2: '',
+  loja3: '',
+  loja4: ''
+};
+
+// Função para validar SKU
+function validarSKU(sku, tab) {
+    const sufixosLoja1 = ['-999', '-100', '-130', '-175', '-VF','-350'];
+
+    if (tab === 'loja1') {
+        // Aceita sufixos da loja1 ou nenhum sufixo ou padrão -XXX numérico
+        const temSufixoLoja1 = sufixosLoja1.some(suf => sku.endsWith(suf));
+        const temSufixoLoja234 = ['-F', '-P', '-V'].some(suf => sku.endsWith(suf));
+        const sufixoNumerico = /^.+-\d{2,4}$/.test(sku);  // Ex: KCAC001-130
+
+        return temSufixoLoja1 || (!temSufixoLoja234 && (sufixoNumerico || !sku.includes('-')));
+    }
+
+    if (tab === 'loja2') return sku.endsWith('-F');
+    if (tab === 'loja3') return sku.endsWith('-P');
+    if (tab === 'loja4') return sku.endsWith('-V');
+
+    return false;
+}
+
+
+
+function trocarUsuario() {
+    // Cria um menu de texto simples para o prompt
+    const menu = `
+Escolha o novo usuário:
+1. Usuário Azul
+2. Usuário Vermelho
+3. Usuário Amarelo
+4. Usuário Laranja
+    `;
+
+    const escolha = prompt(menu);
+    if (!escolha) return; // Usuário clicou em "Cancelar"
+
+    let usuarioSelecionado = null;
+    switch (escolha.trim()) {
+        case '1': usuarioSelecionado = 'blue'; break;
+        case '2': usuarioSelecionado = 'red'; break;
+        case '3': usuarioSelecionado = 'yellow'; break;
+        case '4': usuarioSelecionado = 'orange'; break;
+        default:
+            alert('Opção inválida. Por favor, digite um número de 1 a 4.');
+            return;
+    }
+
+    // Pede a senha única
+    const senha = prompt(`Digite a senha para ${corNome[usuarioSelecionado]}:`);
+    if (senha === senhas[usuarioSelecionado]) { // A senha será 'W2025'
+        corAtual = usuarioSelecionado;
+        document.getElementById('currentUser').textContent = corNome[corAtual];
+        alert(`Usuário alterado para ${corNome[corAtual]}.`);
+        
+        // Atualiza a visualização da aba ativa para refletir o novo usuário
+        ['loja1', 'loja2', 'loja3', 'loja4'].forEach(tab => {
+            if (document.getElementById(tab).classList.contains('active')) {
+                atualizarResultados(tab);
+            }
+        });
+    } else {
+        alert('Senha incorreta.');
+    }
+}
+
+function validateInput() {
+            const textarea = document.querySelector('#ean_input');
+            const lines = textarea.value.split('\n').filter(line => line.trim());
+            const skus = lines.map(line => line.split('\t')[0]?.trim().toUpperCase()).filter(sku => sku);
+            const skuCounts = {};
+            const validSuffixes = ['-999', '-100', '-VF', '-130', '-175', '-F', '-P', '-V'];
+            const suffixPattern = /^(.*?)(?:-999|-100|-VF|-130|-175|-F|-P|-V)?$/;
+            let errors = [];
+
+            // Verificar duplicatas e formato
+            skus.forEach((sku, index) => {
+                if (sku) {
+                    // Contar duplicatas
+                    skuCounts[sku] = (skuCounts[sku] || 0) + 1;
+                    if (skuCounts[sku] > 1) {
+                        errors.push(`Erro: SKU '${sku}' duplicado na linha ${index + 1}`);
+                    }
+                    // Validar sufixo
+                    if (!suffixPattern.test(sku)) {
+                        errors.push(`Erro: Sufixo inválido em SKU '${sku}' na linha ${index + 1}. Sufixos permitidos: ${validSuffixes.join(', ')} ou sem sufixo`);
+                    }
+                    // Verificar formato da linha
+                    const parts = lines[index].split('\t');
+                    if (parts.length !== 2 || !parts[0].trim() || !parts[1].trim()) {
+                        errors.push(`Erro: Formato inválido na linha ${index + 1}. Use SKU[TAB]EAN`);
+                    }
+                }
+            });
+
+            if (errors.length > 0) {
+                alert('Erros encontrados:\n' + errors.join('\n'));
+                return false;
+            }
+            return true;
+        }
+
+
+
+function showTab(tabId) {
+  document.getElementById('welcomeScreen').style.display = 'none';
+  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  atualizarResultados(tabId);
+}
+
+function voltarTelaInicial() {
+  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+  document.getElementById('welcomeScreen').style.display = 'block';
+}
+
+function atualizarTotalEANs() {
+    const eansUnicos = new Set();
+    ['loja1', 'loja2', 'loja3', 'loja4'].forEach(tab => {
+        const registrosTab = db.registros[tab];
+        if (registrosTab.has('mercado')) { // Checa apenas uma subloja, pois o EAN é o mesmo
+            registrosTab.get('mercado').forEach(ean => eansUnicos.add(ean));
+        }
+    });
+    document.getElementById('totalEANs').textContent = eansUnicos.size;
+}
+
+function processarEANs() {
+    const textarea = document.getElementById('eanTextarea');
+    const texto = textarea.value.trim();
+    const progressoContainer = document.getElementById('progressoContainer');
+    const barraProgresso = document.getElementById('barraProgresso');
+
+    if (!texto) {
+        alert('Por favor, insira os dados de EAN/SKU.');
+        return;
+    }
+
+    // Mostrar barra de progresso
+    progressoContainer.style.display = 'block';
+    barraProgresso.style.width = '0%';
+    barraProgresso.innerText = '0%';
+    barraProgresso.setAttribute('aria-valuenow', 0);
+
+    const linhas = texto.split('\n').filter(l => l.trim() !== '');
+    const totalLinhas = linhas.length;
+
+    // Simulação de progresso proporcional
+    let progresso = 0;
+    const tempoTotal = 3000; // tempo total de simulação em ms
+    const passo = 100 / totalLinhas;
+    const intervalo = tempoTotal / totalLinhas;
+
+    const animar = setInterval(() => {
+        if (progresso + passo < 99) {
+            progresso += passo;
+            barraProgresso.style.width = `${progresso.toFixed(0)}%`;
+            barraProgresso.innerText = `${progresso.toFixed(0)}%`;
+            barraProgresso.setAttribute('aria-valuenow', progresso.toFixed(0));
+        } else {
+            clearInterval(animar); // deixa o final para o .then
+        }
+    }, intervalo);
+
+    fetch('/api/ean/process', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: texto })
+    })
+    .then(response => response.json())
+    .then(data => {
+        clearInterval(animar);
+
+      const results = data.results || data;
+
+        // Finalizar a barra
+        barraProgresso.style.width = `100%`;
+        barraProgresso.innerText = `100%`;
+        barraProgresso.setAttribute('aria-valuenow', 100);
+
+        let message = "";
+    if (results.success_count > 0) {
+        message += `✅ SKUs cadastrados com sucesso: ${results.success_count}\n`;
+    }
+
+    if (results.error_count > 0) {
+        message += `❌ Erros encontrados: ${results.error_count}\n`;
+        exibirErros(results.errors);
+        document.getElementById("abaErros-tab").click();
+    }
+
+    if (results.duplicates && results.duplicates.length > 0) {
+        message += `⚠️ Duplicatas ignoradas: ${results.duplicates.length}\n`;
+        exibirDuplicatas(results.duplicates);
+        document.getElementById("abaDuplicatas-tab").click();
+    }
+
+        if (results.success_count > 0) {
+            atualizarTotalEANs();
+            atualizarContadoresLojas();
+            document.getElementById("abaResultado-tab").click();
+            ['loja1', 'loja2', 'loja3', 'loja4'].forEach(tab => {
+                if (document.getElementById(tab).classList.contains('active')) {
+                    atualizarResultados(tab);
+                }
+            });
+        }
+
+         if (message === "") {
+        message = "⚠️ Nenhum dado válido foi processado.";
+    }
+
+
+        alert(message);
+      
+
+        setTimeout(() => {
+            progressoContainer.style.display = 'none';
+        }, 2000);
+    })
+    .catch(error => {
+        clearInterval(animar);
+        console.error('Erro:', error);
+        alert('Erro de comunicação com o servidor.');
+
+        barraProgresso.style.width = `100%`;
+        barraProgresso.innerText = `Erro`;
+        barraProgresso.classList.add("bg-danger");
+    });
+}
+
+
+
+function exibirErros(erros) {
+  const listaErrosDiv = document.getElementById('listaErros');
+  listaErrosDiv.innerHTML = ''; // Limpa erros anteriores
+
+  if (erros.length === 0) {
+    listaErrosDiv.innerHTML = '<div class="alert alert-success">Nenhum erro encontrado no último processamento.</div>';
+    return;
+  }
+
+  let html = `
+    <p>Foram encontrados ${erros.length} erros. Veja os detalhes abaixo:</p>
+    <table class="table table-bordered table-striped">
+      <thead>
+        <tr>
+          <th>Erro</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  for (const erro of erros) {
+    html += `
+      <tr>
+        <td>${erro}</td>
+      </tr>
+    `;
+  }
+
+  html += '</tbody></table>';
+  listaErrosDiv.innerHTML = html;
+}
+
+
+function buscarSKU(tab) {
+  const skuBusca = document.getElementById(`skuBusca${tab.charAt(0).toUpperCase() + tab.slice(1)}`).value.trim().toUpperCase();
+  ultimoSKU[tab] = skuBusca;
+  atualizarResultados(tab);
+}
+
+function copiarTexto(texto) {
+  navigator.clipboard.writeText(texto).then(() => {
+    alert('Copiado para a área de transferência!');
+  }).catch(() => {
+    alert('Falha ao copiar.');
+  });
+}
+
+function atualizarResultados(tab) {
+    const skuBusca = ultimoSKU[tab];
+    const resultadoDiv = document.getElementById(`resultado${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+    resultadoDiv.innerHTML = '';
+
+    if (!skuBusca) {
+        resultadoDiv.innerHTML = '<div class="alert alert-info">Digite um SKU completo ou um prefixo para fazer a busca.</div>';
+        return;
+    }
+
+    const skusEncontrados = new Map();
+    const sublojaPrincipal = db.registros[tab].get('mercado');
+
+    if (sublojaPrincipal) {
+        if (sublojaPrincipal.has(skuBusca)) {
+            const sublojaEans = new Map();
+            for (const subloja of sublojas) {
+                const sublojaMap = db.registros[tab].get(subloja);
+                if (sublojaMap && sublojaMap.has(skuBusca)) {
+                    sublojaEans.set(subloja, sublojaMap.get(skuBusca));
+                }
+            }
+            skusEncontrados.set(skuBusca, sublojaEans);
+        } else {
+            for (const [sku, ean] of sublojaPrincipal.entries()) {
+                if (sku.startsWith(skuBusca)) {
+                    const sublojaEans = new Map();
+                    for (const subloja of sublojas) {
+                        const sublojaMap = db.registros[tab].get(subloja);
+                        if (sublojaMap && sublojaMap.has(sku)) {
+                            sublojaEans.set(subloja, sublojaMap.get(sku));
+                        }
+                    }
+                    skusEncontrados.set(sku, sublojaEans);
+                }
+            }
+        }
+    }
+
+    if (skusEncontrados.size === 0) {
+        resultadoDiv.innerHTML = '<div class="alert alert-warning">Nenhum resultado encontrado para a busca.</div>';
+        return;
+    }
+
+    let html = `
+    <div class="card-sku">
+      <p>Exibindo ${skusEncontrados.size} resultado(s) para a busca "<strong>${skuBusca}</strong>":</p>
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>EAN</th>
+            <th>Mercado</th>
+            <th>Shopee</th>
+            <th>Shein</th>
+            <th>Magalu</th>
+            <th>Site</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+    for (const [sku, sublojaEans] of skusEncontrados) {
+        const ean = sublojaEans.values().next().value || 'N/A';
+        html += `
+      <tr>
+        <td class="sku-ean-column">
+          <strong>${sku}</strong>
+          <button class="btn btn-sm btn-copy" onclick="copiarTexto('${sku}')"><i class="bi bi-clipboard"></i></button>
+        </td>
+        <td class="sku-ean-column">
+          ${ean}
+          <button class="btn btn-sm btn-copy" onclick="copiarTexto('${ean}')"><i class="bi bi-clipboard"></i></button>
+        </td>
+    `;
+        for (const subloja of sublojas) {
+            let cellClass = 'check-cell';
+            let buttonHtml = '';
+
+            if (sublojaEans.has(subloja)) {
+                const eanSub = sublojaEans.get(subloja);
+                const key = `${sku}|${eanSub}|${tab}|${subloja}`;
+                const checks = db.checks.get(key) || new Set();
+
+                let corBtn = 'secondary';
+                let iconClass = 'bi-circle';
+                let title = 'Dar check';
+                let isDisabled = false;
+                let btnClass = 'unchecked';
+
+                if (checks.size > 0) {
+                    const checkerColor = checks.values().next().value; // Pega a cor do primeiro usuário que checou
+                    cellClass += ` checked-${checkerColor}`;
+                    iconClass = 'bi-check-circle-fill';
+                    
+                    if (checks.has(corAtual)) {
+                        title = 'Clique para remover seu check (requer senha)';
+                        corBtn = 'success'; // Botão verde para indicar que você pode interagir
+                    } else {
+                        isDisabled = true;
+                        title = 'Check já realizado por outro usuário';
+                        corBtn = 'secondary'; // Botão cinza para indicar bloqueio
+                    }
+                }
+
+                buttonHtml = `
+                  <button 
+                    class="btn btn-sm btn-check-loja ${btnClass}" 
+                    onclick="checkLoja('${sku}','${eanSub}','${tab}','${subloja}')"
+                    ${isDisabled ? 'disabled' : ''}
+                    title="${title}">
+                    <i class="bi ${iconClass}"></i>
+                  </button>
+                `;
+            }
+            html += `<td class="${cellClass}">${buttonHtml}</td>`;
+        }
+        html += '</tr>';
+    }
+
+    html += '</tbody></table></div>';
+    resultadoDiv.innerHTML = html;
+}
+
+
+function checkLoja(sku, ean, tab, subloja) {
+    const key = `${sku}|${ean}|${tab}|${subloja}`;
+    let checks = db.checks.get(key);
+
+    if (checks && checks.has(corAtual)) {
+        // Pede a senha MESTRA (W2025) para remover o check.
+        const senha = prompt('Digite a senha de remoção para liberar o check:');
+        
+        // Valida contra a senha mestra.
+        if (senha === 'W2025') {
+            checks.delete(corAtual);
+            if (checks.size === 0) {
+                db.checks.delete(key);
+            }
+            alert('Check removido com sucesso.');
+        } else {
+            alert('Senha de remoção incorreta.');
+        }
+    } else if (!checks || checks.size === 0) {
+        // Lógica para adicionar um check (sem alterações)
+        if (!checks) {
+            checks = new Set();
+            db.checks.set(key, checks);
+        }
+        checks.add(corAtual);
+    } else {
+        alert('Este item já foi checado por outro usuário.');
+    }
+    // Atualiza a tabela para refletir a mudança
+    atualizarResultados(tab);
+}
+
+
+function gerarRelatorio(tab) {
+  const subloja = document.getElementById(`select${tab.charAt(0).toUpperCase() + tab.slice(1)}`).value;
+  const prefixo = document.getElementById(`prefixo${tab.charAt(0).toUpperCase() + tab.slice(1)}`).value;
+  const sublojaMap = db.registros[tab].get(subloja);
+
+  if (!sublojaMap || sublojaMap.size === 0) {
+      alert(`Nenhum SKU cadastrado para ${subloja} na ${tab}.`);
+      return;
+  }
+
+  // FUNÇÃO PARA FILTRO PRECISO CORRIGIDA
+  function aplicarFiltroPreciso(sku, filtro) {
+    if (!filtro) return true; // Sem filtro = todos os SKUs
+    
+    // Verifica se o filtro contém hífen (indica filtro específico)
+    const filtroEspecifico = filtro.includes('-');
+    
+    if (filtroEspecifico) {
+      // FILTRO ESPECÍFICO (ex: "PV-999", "PR-130", "FF-175")
+      // Deve começar exatamente com o filtro completo
+      return sku.startsWith(filtro);
+    } else {
+      // FILTRO GERAL (ex: "PV", "PR", "FF")
+      // Deve começar com o filtro MAS NÃO ter hífen logo após o prefixo
+      if (!sku.startsWith(filtro)) return false;
+      
+      // Verifica se logo após o prefixo há um hífen (indicando sufixo específico)
+      const proximoChar = sku.charAt(filtro.length);
+      
+      // Se o próximo caractere é hífen, significa que tem sufixo específico
+      // Para filtro geral, queremos EXCLUIR esses SKUs
+      return proximoChar !== '-';
+    }
+  }
+
+  // Coleta SKUs sem check e aplica filtro preciso
+  const skusFiltrados = [];
+  for (const [sku, ean] of sublojaMap) {
+    const key = `${sku}|${ean}|${tab}|${subloja}`;
+    const temCheck = db.checks.has(key) && db.checks.get(key).size > 0;
+    const passaFiltro = aplicarFiltroPreciso(sku, prefixo);
+    
+    if (!temCheck && passaFiltro) {
+      skusFiltrados.push(sku);
+    }
+  }
+  
+  if (skusFiltrados.length === 0) {
+      alert('Nenhum SKU sem check encontrado para este filtro.');
+      return;
+  }
+
+  // Ordena alfabeticamente
+  skusFiltrados.sort();
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+
+  // CONFIGURAÇÕES OTIMIZADAS PARA 100% DO ESPAÇO
+  const margem = 8;  // Margem mínima
+  const larguraPagina = 210;
+  const alturaPagina = 297;
+  const larguraUtil = larguraPagina - 2 * margem;
+  const alturaUtil = alturaPagina - 2 * margem;
+  
+  // Configurações de texto otimizadas
+  const tamanhoFonte = 7;  // Fonte menor para caber mais
+  const alturaLinha = 4;   // Espaçamento mínimo entre linhas
+  const colunas = 6;       // Mais colunas para aproveitar largura
+  const larguraColuna = larguraUtil / colunas;
+  
+  // Calcula quantos itens cabem por página
+  const linhasDisponiveis = Math.floor((alturaUtil - 20) / alturaLinha); // -20 para cabeçalho
+  const itensPerPage = linhasDisponiveis * colunas;
+  
+  let y = margem + 10;
+
+  // Cabeçalho compacto
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'bold');
+  doc.text(`SKUs SEM Check - ${tab.toUpperCase()}/${subloja.toUpperCase()}${prefixo ? ` - Filtro: ${prefixo}` : ''}`, margem, y);
+  
+  doc.setFontSize(8);
+  doc.setFont(undefined, 'normal');
+  doc.text(`Total: ${skusFiltrados.length} SKUs`, margem, y + 5);
+  
+  y += 15;
+
+  // Configura fonte para os SKUs
+  doc.setFontSize(tamanhoFonte);
+  doc.setFont(undefined, 'normal');
+
+  // Processa SKUs em grupos por página para máximo aproveitamento
+  for (let pageStart = 0; pageStart < skusFiltrados.length; pageStart += itensPerPage) {
+    if (pageStart > 0) {
+      doc.addPage();
+      y = margem + 5;
+    }
+
+    const pageEnd = Math.min(pageStart + itensPerPage, skusFiltrados.length);
+    const skusNaPagina = skusFiltrados.slice(pageStart, pageEnd);
+
+    // Distribui SKUs em grid otimizado
+    skusNaPagina.forEach((sku, index) => {
+      const coluna = index % colunas;
+      const linha = Math.floor(index / colunas);
+      
+      const x = margem + (coluna * larguraColuna);
+      const yAtual = y + (linha * alturaLinha);
+      
+      // Verifica se ainda cabe na página
+      if (yAtual < (alturaPagina - margem)) {
+        doc.text(sku, x, yAtual);
+      }
+    });
+  }
+
+  // Nome do arquivo
+  const nomeArquivo = `SKUs_sem_check_${tab}_${subloja}${prefixo ? `_${prefixo}` : ''}_${new Date().toISOString().slice(0,10)}.pdf`;
+  doc.save(nomeArquivo);
+}
+
+
+
+
+
+
+
+
+
+
+// Event listeners para busca com a tecla Enter
+['loja1', 'loja2', 'loja3', 'loja4'].forEach(tab => {
+  const input = document.getElementById(`skuBusca${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+  input.addEventListener('keypress', e => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        buscarSKU(tab);
+    }
+  });
+});
+
+// Atalho para cadastrar com Ctrl+Enter
+document.getElementById('eanTextarea').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.ctrlKey) {
+    e.preventDefault();
+    processarEANs();
+  }
+});
+
+// Inicializa a contagem de EANs ao carregar a página
+document.addEventListener('DOMContentLoaded', () => {
+  carregarEansDoBackend(); // ADICIONADO
+  atualizarTotalEANs();
+  atualizarContadoresLojas();
+});
+
+
+
+
+function atualizarContadoresLojas() {
+    ['loja1', 'loja2', 'loja3', 'loja4'].forEach(tab => {
+        const sublojaMap = db.registros[tab].get('mercado');
+        const total = sublojaMap ? sublojaMap.size : 0;
+        document.getElementById(`total${tab.charAt(0).toUpperCase() + tab.slice(1)}`).textContent = total;
+    });
+}
+
+
+function abrirPopupInfo() {
+  const modal = document.getElementById('infoModal');
+  modal.style.display = 'flex'; // Usa flex para centralizar
+}
+
+function fecharPopupInfo() {
+  const modal = document.getElementById('infoModal');
+  modal.style.display = 'none';
+}
+
+
+
+/*
+document.addEventListener('DOMContentLoaded', function() {
+    const stores = ['Loja 1', 'Loja 2', 'Loja 3', 'Loja 4'];
+    const marketplaces = ['Mercado', 'Shopee', 'Shein', 'Magalu', 'Site'];
+
+    // Função para atualizar o total de EANs
+    function updateTotalEans() {
+        fetch('/consulta_ean')
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const totalEans = doc.querySelector('#total-eans').textContent.match(/\d+/)[0];
+                document.querySelector('#total-eans').textContent = `Total de EANs cadastrados: ${totalEans}`;
+            })
+            .catch(error => console.error('Erro ao atualizar total de EANs:', error));
+    }*/
+
+    // Função para cadastrar EAN
+    document.querySelector('#cadastrar-btn').addEventListener('click', function() {
+        const sku = document.querySelector('#sku-input').value.trim();
+        const ean = document.querySelector('#ean-input').value.trim();
+        const store = document.querySelector('#store-select').value;
+
+        if (!sku || !ean || !store) {
+            alert('Por favor, preencha todos os campos.');
+            return;
+        }
+
+        fetch('/add_ean', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sku, ean, store })
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) {
+                    document.querySelector('#sku-input').value = '';
+                    document.querySelector('#ean-input').value = '';
+                    updateTotalEans();
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao cadastrar EAN:', error);
+                alert('Erro ao cadastrar EAN.');
+            });
+    });
+
+    // Função para exibir EANs por loja
+    function displayEans(store) {
+        fetch(`/get_eans/${store}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const container = document.querySelector(`#${store.toLowerCase().replace(' ', '-')}-eans`);
+                    container.innerHTML = '';
+                    data.eans.forEach(ean => {
+                        const div = document.createElement('div');
+                        div.textContent = `SKU: ${ean.sku} - EAN: ${ean.ean}`;
+                        container.appendChild(div);
+                    });
+                    document.querySelector(`#${store.toLowerCase().replace(' ', '-')}-total`).textContent = 
+                        `Total de EANs nesta loja: ${data.eans.length}`;
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => console.error(`Erro ao carregar EANs para ${store}:`, error));
+    }
+
+    // Função para exibir erros de cadastro
+    document.querySelector('#ver-erros').addEventListener('click', function() {
+        fetch('/get_ean_errors')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const container = document.querySelector('#erros-cadastro');
+                    container.innerHTML = '<h3>Erros de Cadastro</h3>';
+                    data.errors.forEach(error => {
+                        const div = document.createElement('div');
+                        div.textContent = `SKU: ${error.sku}, EAN: ${error.ean || 'N/A'}, Loja: ${error.store}, Erro: ${error.error_message}, Data: ${error.created_at}`;
+                        container.appendChild(div);
+                    });
+                    document.querySelector('#erros-section').style.display = 'block';
+                    stores.forEach(s => document.querySelector(`#${s.toLowerCase().replace(' ', '-')}-section`).style.display = 'none');
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => console.error('Erro ao carregar erros:', error));
+    });
+
+    // Função para exibir SKUs não cadastrados
+    function displayUncatalogedSkus(store, marketplace) {
+        fetch(`/get_uncataloged_skus/${store}?marketplace=${marketplace}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const container = document.querySelector(`#${store.toLowerCase().replace(' ', '-')}-skus`);
+                    container.innerHTML = '';
+                    data.skus.forEach(sku => {
+                        const div = document.createElement('div');
+                        div.textContent = `SKU: ${sku.sku} - Marketplace: ${sku.marketplace}`;
+                        container.appendChild(div);
+                    });
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => console.error(`Erro ao carregar SKUs não cadastrados para ${store}:`, error));
+    }
+
+    // Event listeners para botões de busca
+    stores.forEach(store => {
+        const storeId = store.toLowerCase().replace(' ', '-');
+        document.querySelector(`#${storeId}-btn`).addEventListener('click', function() {
+            stores.forEach(s => document.querySelector(`#${s.toLowerCase().replace(' ', '-')}-section`).style.display = 'none');
+            document.querySelector(`#${storeId}-section`).style.display = 'block';
+            document.querySelector('#erros-section').style.display = 'none';
+            displayEans(store);
+        });
+
+        document.querySelector(`#${storeId}-buscar`).addEventListener('click', function() {
+            const marketplace = document.querySelector(`#${storeId}-marketplace`).value;
+            displayUncatalogedSkus(store, marketplace);
+        });
+
+        document.querySelector(`#${storeId}-pdf`).addEventListener('click', function() {
+            window.location.href = `/download_ean_pdf/${store}`;
+        });
+    });
+
+    // Event listeners para botões de voltar
+    document.querySelectorAll('.voltar-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            stores.forEach(s => document.querySelector(`#${s.toLowerCase().replace(' ', '-')}-section`).style.display = 'none');
+            document.querySelector('#erros-section').style.display = 'none';
+            document.querySelector('#main-section').style.display = 'block';
+        });
+    });
+
+    // Event listener para copiar NCMs e pesos
+    document.querySelectorAll('.copiar-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const text = this.previousElementSibling.textContent.split('Copiar')[0].trim();
+            navigator.clipboard.writeText(text).then(() => alert('Copiado para a área de transferência!'));
+        });
+    });
+
+    // Inicializar total de EANs
+    updateTotalEans();
+
+
+
+async function carregarEansDoBackend() {
+  try {
+    const response = await fetch('/api/ean/all');
+    const data = await response.json();
+
+    if (data.success) {
+      for (const loja in data.lojas) {
+        const registros = data.lojas[loja];
+        if (!db.registros[loja]) db.registros[loja] = new Map();
+
+        for (const reg of registros) {
+          if (!db.registros[loja].has(reg.subloja)) {
+            db.registros[loja].set(reg.subloja, new Map());
+          }
+          db.registros[loja].get(reg.subloja).set(reg.sku, reg.ean);
+        }
+      }
+
+      atualizarTotalEANs();
+      atualizarContadoresLojas();
+    } else {
+      console.error('Erro ao carregar EANs do backend:', data.message);
+    }
+  } catch (err) {
+    console.error('Erro de comunicação com o backend:', err);
+  }
+}
+
